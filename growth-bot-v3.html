@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مهندس النمو الرقمي</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep:      #0a0b0f;
+    --bg-panel:     #111318;
+    --bg-input:     #1e2330;
+    --accent-gold:  #c8a84b;
+    --accent-light: #e8cc7a;
+    --accent-dim:   rgba(200,168,75,0.15);
+    --accent-glow:  rgba(200,168,75,0.4);
+    --bot-bubble:   #1a2035;
+    --user-bubble:  linear-gradient(135deg,#c8a84b,#a07828);
+    --text-primary: #eef0f6;
+    --text-secondary:#8a91a8;
+    --text-muted:   #4a5168;
+    --border:       rgba(200,168,75,0.12);
+    --border-hover: rgba(200,168,75,0.35);
+    --radius-lg:    18px;
+    --radius-md:    12px;
+    --font-main:    'Cairo', 'Tajawal', sans-serif;
+    --shadow-gold:  0 0 30px rgba(200,168,75,0.15);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg-deep);
+    font-family: var(--font-main);
+    color: var(--text-primary);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  body::before {
+    content:'';
+    position:fixed; inset:0; z-index:0;
+    background:
+      radial-gradient(ellipse 60% 40% at 85% 10%, rgba(200,168,75,0.06) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 60% at 10% 90%, rgba(200,168,75,0.04) 0%, transparent 70%);
+    pointer-events:none;
+  }
+
+  /* ── هيدر ── */
+  .header {
+    position:relative; z-index:10;
+    background:rgba(17,19,24,0.95);
+    border-bottom:1px solid var(--border);
+    padding:14px 20px;
+    display:flex; align-items:center; gap:14px;
+    backdrop-filter:blur(20px);
+    box-shadow:0 4px 24px rgba(0,0,0,0.4);
+  }
+  .bot-avatar {
+    width:44px; height:44px; border-radius:50%;
+    background:linear-gradient(135deg,#c8a84b,#7a5c1e);
+    display:flex; align-items:center; justify-content:center;
+    font-size:20px; flex-shrink:0;
+    position:relative;
+    animation:pulse 3s ease infinite;
+  }
+  .bot-avatar::after {
+    content:'';
+    position:absolute; bottom:1px; right:1px;
+    width:10px; height:10px; border-radius:50%;
+    background:#4cef8a;
+    border:2px solid var(--bg-panel);
+  }
+  @keyframes pulse {
+    0%,100%{ box-shadow:0 0 0 2px rgba(200,168,75,0.3); }
+    50%    { box-shadow:0 0 0 5px rgba(200,168,75,0.1), 0 0 20px rgba(200,168,75,0.2); }
+  }
+  .header-info h1 { font-size:15px; font-weight:700; color:var(--accent-light); }
+  .header-info p  { font-size:12px; color:var(--text-secondary); margin-top:1px; }
+  .header-badge {
+    margin-right:auto;
+    background:var(--accent-dim);
+    border:1px solid rgba(200,168,75,0.3);
+    color:var(--accent-gold);
+    font-size:11px; font-weight:600;
+    padding:4px 10px; border-radius:20px;
+  }
+
+  /* ── شريط التقدم ── */
+  .phase-bar {
+    position:relative; z-index:9;
+    background:rgba(17,19,24,0.8);
+    border-bottom:1px solid var(--border);
+    padding:8px 20px;
+  }
+  .phase-dots { display:flex; gap:6px; }
+  .phase-dot {
+    height:3px; flex:1; border-radius:2px;
+    background:var(--text-muted); transition:background 0.4s;
+  }
+  .phase-dot.active { background:var(--accent-gold); }
+  .phase-dot.done   { background:rgba(200,168,75,0.45); }
+  .phase-label { font-size:11px; color:var(--text-muted); text-align:center; margin-top:4px; }
+
+  /* ── منطقة الدردشة ── */
+  .chat-area {
+    flex:1; overflow-y:auto;
+    padding:20px 16px;
+    position:relative; z-index:5;
+    scroll-behavior:smooth;
+  }
+  .chat-area::-webkit-scrollbar { width:4px; }
+  .chat-area::-webkit-scrollbar-thumb { background:rgba(200,168,75,0.25); border-radius:4px; }
+
+  /* ── رسائل ── */
+  .msg-row {
+    display:flex; gap:10px; margin-bottom:16px;
+    animation:msgIn 0.3s cubic-bezier(.2,.8,.3,1) both;
+  }
+  .msg-row.user { flex-direction:row-reverse; }
+  @keyframes msgIn {
+    from { opacity:0; transform:translateY(10px) scale(0.97); }
+    to   { opacity:1; transform:none; }
+  }
+  .msg-avatar {
+    width:32px; height:32px; border-radius:50%;
+    background:linear-gradient(135deg,#c8a84b,#7a5c1e);
+    display:flex; align-items:center; justify-content:center;
+    font-size:14px; flex-shrink:0; align-self:flex-end;
+  }
+  .msg-avatar.user-av {
+    background:linear-gradient(135deg,#3a4a6b,#1e2a45);
+    font-size:12px;
+  }
+  .bubble {
+    max-width:min(84%,540px);
+    padding:12px 16px; border-radius:var(--radius-lg);
+    line-height:1.65; font-size:14px; word-break:break-word;
+  }
+  .bubble.bot {
+    background:var(--bot-bubble);
+    border:1px solid var(--border);
+    border-bottom-right-radius:4px;
+  }
+  .bubble.user {
+    background:var(--user-bubble);
+    border-bottom-left-radius:4px;
+    color:#fff; font-weight:500;
+  }
+  .bubble strong { color:var(--accent-light); font-weight:700; }
+  .bubble .sec {
+    display:block; color:var(--accent-gold);
+    font-weight:700; font-size:13px;
+    margin:10px 0 6px; padding-top:8px;
+    border-top:1px solid var(--border);
+  }
+  .bubble .sec:first-child { margin-top:0; padding-top:0; border-top:none; }
+
+  /* ── أزرار سريعة ── */
+  .quick-replies {
+    display:flex; flex-wrap:wrap; gap:8px;
+    margin-top:10px;
+    animation:msgIn 0.35s 0.1s both;
+  }
+  .qr-btn {
+    background:transparent;
+    border:1px solid var(--border-hover);
+    color:var(--accent-light);
+    padding:8px 16px; border-radius:20px;
+    font-family:var(--font-main); font-size:13px; font-weight:600;
+    cursor:pointer; transition:all 0.2s; white-space:nowrap;
+    position:relative; overflow:hidden;
+  }
+  .qr-btn::before {
+    content:''; position:absolute; inset:0;
+    background:var(--accent-dim); opacity:0; transition:opacity 0.2s;
+  }
+  .qr-btn:hover { border-color:var(--accent-gold); color:#fff; transform:translateY(-1px); }
+  .qr-btn:hover::before { opacity:1; }
+  .qr-btn.selected { background:var(--user-bubble); border-color:transparent; color:#fff; pointer-events:none; }
+  .qr-btn:disabled { opacity:0.4; pointer-events:none; }
+
+  /* ══════════════════════════════════════
+     نموذج ROI — الإصلاح الجوهري v3
+     
+     المشكلة في v2: أزرار toggleWeb كانت
+     تستخدم onclick="" داخل innerHTML
+     مما يسبب مشكلة في بعض المتصفحات عند
+     حقن HTML ديناميكياً.
+     
+     الحل: إزالة كل onclick="" من الـ HTML
+     واستخدام event delegation مركزي على
+     $chat بدلاً من ذلك — هذا النهج مضمون
+     100% بغض النظر عن كيفية حقن HTML.
+  ══════════════════════════════════════ */
+  .roi-form {
+    margin-top:14px;
+    display:flex; flex-direction:column; gap:12px;
+  }
+  .roi-field { display:flex; flex-direction:column; gap:5px; }
+  .roi-field label { font-size:12px; font-weight:700; color:var(--text-secondary); }
+  .field-wrap {
+    display:flex; align-items:center; gap:8px;
+    background:rgba(255,255,255,0.04);
+    border:1px solid var(--border-hover);
+    border-radius:var(--radius-md);
+    padding:9px 12px;
+    transition:border-color 0.2s, box-shadow 0.2s;
+  }
+  .field-wrap:focus-within {
+    border-color:var(--accent-gold);
+    box-shadow:0 0 0 2px rgba(200,168,75,0.12);
+  }
+  .roi-field input[type="number"] {
+    flex:1; background:transparent;
+    border:none; outline:none;
+    color:var(--text-primary);
+    font-family:var(--font-main); font-size:14px;
+    direction:ltr; text-align:right;
+    -moz-appearance:textfield;
+  }
+  .roi-field input[type="number"]::-webkit-outer-spin-button,
+  .roi-field input[type="number"]::-webkit-inner-spin-button { -webkit-appearance:none; }
+  .roi-field input::placeholder { color:var(--text-muted); }
+  .unit { font-size:12px; color:var(--text-secondary); white-space:nowrap; }
+  .field-hint { font-size:11px; color:var(--text-muted); }
+
+  /* مجموعة نعم/لا */
+  .roi-toggle { display:flex; gap:8px; }
+  .roi-toggle-btn {
+    flex:1; padding:9px 8px;
+    border:1px solid var(--border-hover);
+    border-radius:var(--radius-md);
+    background:transparent;
+    color:var(--text-secondary);
+    font-family:var(--font-main); font-size:13px; font-weight:600;
+    cursor:pointer; transition:all 0.2s;
+    /* data-action يُستخدم في event delegation */
+  }
+  .roi-toggle-btn.active {
+    border-color:var(--accent-gold);
+    background:var(--accent-dim);
+    color:var(--accent-light);
+  }
+
+  /* زر الحساب */
+  .roi-submit {
+    padding:11px;
+    border:none; border-radius:var(--radius-md);
+    background:linear-gradient(135deg,#c8a84b,#a07828);
+    color:#fff; font-family:var(--font-main);
+    font-size:14px; font-weight:700;
+    cursor:pointer; transition:all 0.2s;
+    /* data-action يُستخدم في event delegation */
+  }
+  .roi-submit:hover { transform:translateY(-1px); box-shadow:0 4px 16px var(--accent-glow); }
+  .roi-submit:active { transform:translateY(0); }
+  .roi-submit:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+
+  .roi-error {
+    color:#ff7070; font-size:12px; display:none;
+    background:rgba(255,100,100,0.08);
+    border-right:3px solid #ff7070;
+    padding:6px 10px; border-radius:6px;
+  }
+  .roi-error.show { display:block; }
+
+  /* ── جدول ROI ── */
+  .roi-table {
+    width:100%; border-collapse:collapse;
+    margin:10px 0 4px; font-size:12px;
+  }
+  .roi-table th {
+    background:rgba(200,168,75,0.1); color:var(--accent-gold);
+    font-weight:700; padding:6px 8px;
+    border:1px solid var(--border); text-align:center;
+  }
+  .roi-table td {
+    padding:5px 8px; border:1px solid var(--border); text-align:center;
+  }
+  .roi-table .rl { text-align:right; color:var(--text-secondary); font-weight:600; }
+  .roi-table tr:hover td { background:rgba(255,255,255,0.02); }
+  .stag { display:inline-block; padding:2px 7px; border-radius:10px; font-size:11px; font-weight:700; }
+  .s-cons { background:rgba(255,165,0,0.15);  color:#ffb347; }
+  .s-real { background:rgba(72,200,120,0.15); color:#4ec97a; }
+  .s-opt  { background:rgba(100,180,255,0.15);color:#64b4ff; }
+
+  /* ── بطاقة خدمة ── */
+  .svc-card {
+    background:rgba(200,168,75,0.05);
+    border:1px solid rgba(200,168,75,0.2);
+    border-radius:var(--radius-md);
+    padding:12px 14px; margin:6px 0 4px;
+  }
+  /* ترتيب الأولوية: 1 ذهبي، 2 فضي، 3-5 عادي */
+  .svc-card.priority-1 { border-color:rgba(200,168,75,0.45); background:rgba(200,168,75,0.08); }
+  .svc-card.priority-2 { border-color:rgba(160,160,180,0.3); }
+  .svc-card .sct { color:var(--accent-light); font-weight:800; font-size:14px; margin-bottom:6px; }
+  .svc-card .scr {
+    display:flex; justify-content:space-between;
+    font-size:12px; color:var(--text-secondary);
+    margin-top:4px; gap:8px;
+  }
+  .svc-card .scr span { color:var(--text-primary); }
+  .badge-gold {
+    background:linear-gradient(135deg,#c8a84b,#a07828);
+    color:#fff; font-size:10px; font-weight:700;
+    padding:2px 8px; border-radius:10px;
+    display:inline-block; margin-bottom:4px;
+  }
+  .badge-silver {
+    background:linear-gradient(135deg,#8a91a8,#5a6178);
+    color:#fff; font-size:10px; font-weight:700;
+    padding:2px 8px; border-radius:10px;
+    display:inline-block; margin-bottom:4px;
+  }
+  .badge-supp {
+    background:rgba(200,168,75,0.2);
+    color:var(--accent-gold); font-size:10px; font-weight:700;
+    padding:2px 8px; border-radius:10px;
+    display:inline-block; margin-bottom:4px;
+  }
+  .note {
+    background:rgba(255,200,60,0.08);
+    border-right:3px solid var(--accent-gold);
+    border-radius:6px; padding:8px 12px;
+    font-size:12px; color:var(--text-secondary);
+    margin-top:8px; line-height:1.6;
+  }
+
+  /* ── مؤشر الكتابة ── */
+  .typing-row {
+    display:flex; align-items:center; gap:10px;
+    margin-bottom:16px; animation:msgIn 0.2s both;
+  }
+  .dots {
+    display:flex; gap:4px;
+    background:var(--bot-bubble);
+    border:1px solid var(--border);
+    padding:12px 16px; border-radius:var(--radius-lg);
+    border-bottom-right-radius:4px;
+  }
+  .dot {
+    width:6px; height:6px; border-radius:50%;
+    background:var(--accent-gold);
+    animation:bounce 1.2s infinite; opacity:0.7;
+  }
+  .dot:nth-child(2){ animation-delay:0.2s; }
+  .dot:nth-child(3){ animation-delay:0.4s; }
+  @keyframes bounce {
+    0%,80%,100%{ transform:translateY(0); opacity:0.7; }
+    40%        { transform:translateY(-5px); opacity:1; }
+  }
+
+  /* ── منطقة الإدخال ── */
+  .input-area {
+    position:relative; z-index:10;
+    background:rgba(17,19,24,0.97);
+    border-top:1px solid var(--border);
+    padding:12px 16px;
+    backdrop-filter:blur(20px);
+  }
+  .input-wrap {
+    display:flex; gap:10px; align-items:flex-end;
+    background:var(--bg-input);
+    border:1px solid var(--border);
+    border-radius:24px;
+    padding:8px 8px 8px 14px;
+    transition:border-color 0.2s;
+  }
+  .input-wrap:focus-within {
+    border-color:rgba(200,168,75,0.5);
+    box-shadow:0 0 0 3px rgba(200,168,75,0.08);
+  }
+  #userInput {
+    flex:1; background:transparent;
+    border:none; outline:none;
+    color:var(--text-primary);
+    font-family:var(--font-main); font-size:14px;
+    direction:rtl; padding:2px 0; min-height:22px;
+  }
+  #userInput::placeholder { color:var(--text-muted); }
+  #userInput:disabled { opacity:0.5; cursor:not-allowed; }
+  #sendBtn {
+    width:38px; height:38px; border-radius:50%;
+    background:linear-gradient(135deg,#c8a84b,#a07828);
+    border:none; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0; transition:all 0.2s;
+    color:#fff; font-size:16px;
+  }
+  #sendBtn:hover { transform:scale(1.08); box-shadow:0 4px 16px var(--accent-glow); }
+  #sendBtn:active { transform:scale(0.96); }
+  #sendBtn:disabled { opacity:0.4; cursor:not-allowed; transform:none; }
+  .input-hint { text-align:center; font-size:11px; color:var(--text-muted); margin-top:6px; }
+
+  @media(min-width:600px) {
+    body { max-width:520px; margin:0 auto; box-shadow:0 0 60px rgba(0,0,0,0.6); }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="bot-avatar">🤖</div>
+  <div class="header-info">
+    <h1>مهندس النمو الرقمي</h1>
+    <p>المستشار الاستراتيجي الرسمي • يرد الآن</p>
+  </div>
+  <div class="header-badge">مدعوم بـ AI</div>
+</div>
+
+<div class="phase-bar">
+  <div class="phase-dots">
+    <div class="phase-dot active" id="ph0"></div>
+    <div class="phase-dot" id="ph1"></div>
+    <div class="phase-dot" id="ph2"></div>
+    <div class="phase-dot" id="ph3"></div>
+  </div>
+  <div class="phase-label" id="phLabel">الترحيب</div>
+</div>
+
+<div class="chat-area" id="chatArea"></div>
+
+<div class="input-area">
+  <div class="input-wrap">
+    <input type="text" id="userInput" placeholder="اكتب رسالتك هنا..." autocomplete="off"/>
+    <button id="sendBtn">➤</button>
+  </div>
+  <p class="input-hint">اضغط Enter للإرسال • أو استخدم الأزرار أعلاه</p>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════
+   قاعدة بيانات الخدمات [G]
+   65+ خدمة — المُدرَجة هنا هي المستخدمة في خريطة [K]
+══════════════════════════════════════════════════════ */
+const SVC = {
+  1:  {n:"بحث الكلمات المفتاحية الاستراتيجي",     p:"3,500–6,000",  d:"3-5 أيام",    g:"إعادة عمل مجانية إذا لم تكن 70% قابلة للترتيب",   k:"زيادة الزيارات العضوية 80%+ خلال 6 أشهر", c:"SEO"},
+  3:  {n:"تحسين ملف الأعمال على جوجل (GBP)",      p:"2,000–3,500",  d:"2-3 أيام",    g:"ظهور في Local Pack خلال 45 يوم أو استرداد 30%",    k:"ظهور في أول 3 نتائج + زيادة المكالمات 150-300%", c:"SEO"},
+  9:  {n:"كتابة نصوص الموقع (Copywriting)",        p:"4,500–9,000",  d:"5-10 أيام",   g:"إعادة كتابة إذا لم يتحسن التحويل 20%+",            k:"زيادة معدل التحويل 30-60%", c:"CRO"},
+  10: {n:"الأسئلة الشائعة الذكية (FAQ Schema)",    p:"2,500–4,500",  d:"3-5 أيام",    g:"ظهور في Rich Results خلال 30 يوم",                  k:"ظهور في Featured Snippets لـ5-10 أسئلة", c:"SEO"},
+  12: {n:"البحث عن فجوات المحتوى",                p:"4,000–7,500",  d:"4-6 أيام",    g:"إعادة تحليل مجانية بعد 6 أشهر",                    k:"زيادة الزيارات 80-150% بعد سد الفجوات", c:"SEO"},
+  16: {n:"تهيئة السيو الداخلي الشامل",             p:"7,000–16,000", d:"2-4 أسابيع",  g:"إعادة تحسين مجانية بعد 3 أشهر",                    k:"زيادة الزيارات العضوية 60-120%", c:"SEO"},
+  32: {n:"إعلانات جوجل للبحث (Search Ads)",        p:"3,500–8,000",  d:"3-5 أيام",    g:"—",                                                 k:"50 نقرة مؤهلة خلال أول 30 يوم", c:"Ads"},
+  34: {n:"إعادة الاستهداف (Retargeting)",           p:"3,000–7,000",  d:"3-7 أيام",    g:"10% تحويل على الأقل",                               k:"تحويل 15-30% من الزوار العائدين", c:"Ads"},
+  35: {n:"إعلانات فيسبوك وإنستجرام",               p:"3,500–8,000",  d:"3-7 أيام",    g:"—",                                                 k:"CTR 1.5%+ وCPA أقل من المنافسين بـ25%", c:"Ads"},
+  38: {n:"تحسين جودة الإعلانات (Quality Score)",   p:"4,500–9,000",  d:"1-2 أسبوع",   g:"تحسين QS بـ2+ نقاط أو استرداد 50%",                k:"توفير 30-50% من تكلفة النقرة", c:"Ads"},
+  40: {n:"إعلانات يوتيوب (YouTube Ads)",            p:"4,000–8,000",  d:"5-10 أيام",   g:"—",                                                 k:"50,000 مشاهدة خلال 60 يوم", c:"Ads"},
+  41: {n:"تدقيق وتحسين الحملات القائمة",           p:"5,000–10,000", d:"5-10 أيام",   g:"اكتشاف 15+ مشكلة قابلة للإصلاح",                   k:"توفير 30-60% من الإنفاق الإعلاني", c:"Ads"},
+  43: {n:"تدقيق معدل التحويل (CRO Audit)",         p:"6,000–12,000", d:"5-10 أيام",   g:"اكتشاف 15+ فرصة قابلة للتطبيق",                    k:"فرص تزيد التحويل 50-150%", c:"CRO"},
+  44: {n:"صفحة هبوط عالية التحويل (Landing Page)", p:"5,000–12,000", d:"1-2 أسبوع",   g:"إعادة تصميم إذا لم يتحقق 5% تحويل",                k:"معدل تحويل 8%+", c:"CRO"},
+  48: {n:"دليل مبيعات تفاعلي (Sales Playbook)",    p:"8,000–16,000", d:"2-3 أسابيع",  g:"جلسة تدريب مجانية للفريق",                          k:"زيادة معدل الإغلاق 30-50%", c:"Consulting"},
+  52: {n:"استراتيجية الإثبات الاجتماعي",           p:"3,000–6,500",  d:"2-3 أسابيع",  g:"جمع 15+ شهادة حقيقية",                              k:"زيادة معدل التحويل 30-60%", c:"CRO"},
+  55: {n:"برنامج إحالة العملاء (Referral Program)", p:"6,000–13,000", d:"2-3 أسابيع",  g:"مشاركة 10%+ من العملاء خلال 90 يوم",                k:"20-40% من العملاء الجدد من إحالات", c:"CRO"},
+  57: {n:"تقسيم قائمة البريد (Segmentation)",       p:"3,500–7,000",  d:"3-7 أيام",    g:"تحسين 40%+ في المقاييس",                            k:"زيادة Open Rate 60%+", c:"Email"},
+  58: {n:"سلسلة ترحيب آلية (Welcome Sequence)",     p:"4,000–8,000",  d:"5-10 أيام",   g:"إعادة كتابة إذا لم يتحقق 15% تحويل",               k:"تحويل 20-40% من المشتركين لعملاء", c:"Email"},
+  59: {n:"استعادة السلة المتروكة",                  p:"3,500–7,500",  d:"5-10 أيام",   g:"استعادة 15%+ أو إعادة كتابة",                       k:"استعادة 20-30% من السلات المتروكة", c:"Email"},
+  67: {n:"شخصية المشتري المثالي (Buyer Persona)",   p:"6,000–12,000", d:"1-2 أسبوع",   g:"جلسة تدريب الفريق مجانية",                          k:"تحسين استهداف التسويق 80-120%", c:"Consulting"},
+  71: {n:"ورشة عمل استراتيجية (Strategy Workshop)", p:"12,000–25,000",d:"يوم كامل",    g:"جلسة متابعة مجانية بعد 60 يوم",                    k:"استراتيجية موحدة + توفير 100+ ساعة/شهر", c:"Consulting"},
+  73: {n:"استراتيجية محتوى السوشيال ميديا",         p:"8,000–16,000", d:"1-2 أسبوع",   g:"استشارة ربع سنوية مجانية",                          k:"زيادة الوصول العضوي 200-400%", c:"Social"},
+  75: {n:"إعلانات سناب شات",                        p:"4,000–8,000",  d:"5-10 أيام",   g:"—",                                                 k:"100,000 مشاهدة خلال 30 يوم", c:"Ads"},
+  82: {n:"تحسين ملفات السوشيال ميديا",              p:"2,000–4,500",  d:"2-4 أيام",    g:"إعادة تحسين مجانية بعد 60 يوم",                    k:"زيادة التحويل من زائر لمتابع 60-100%", c:"Social"},
+  87: {n:"إعداد Google Analytics 4",                p:"4,500–9,000",  d:"5-10 أيام",   g:"دعم فني 60 يوم مجاني",                              k:"دقة بيانات 98%+", c:"Analytics"},
+  88: {n:"لوحات تحكم تفاعلية (Looker Studio)",      p:"3,500–7,500",  d:"5-10 أيام",   g:"تحديثات مجانية 90 يوم",                             k:"توفير 10-20 ساعة عمل شهرياً", c:"Analytics"},
+  91: {n:"تتبع التحويلات الشامل",                   p:"4,000–8,500",  d:"5-10 أيام",   g:"إصلاح مجاني لأي مشكلة خلال 90 يوم",                k:"تحسين ROAS بـ30-60%", c:"Analytics"},
+  93: {n:"نماذج الإسناد (Attribution Modeling)",    p:"7,000–14,000", d:"2-3 أسابيع",  g:"جلسة شرح مفصلة 90 دقيقة",                          k:"زيادة ROI بـ30-50%", c:"Analytics"},
+  98: {n:"حملة مؤثرين صغار (Micro-Influencers)",    p:"10,000–25,000",d:"1-3 أشهر",    g:"الوصول المتفق عليه أو تعويض",                       k:"1,000,000+ وصول بتكلفة منخفضة", c:"Social"},
+  107:{n:"تحسين صفحات المنتجات (Product CRO)",      p:"8,000–18,000", d:"2-3 أسابيع",  g:"تحسين 30%+ أو إعادة عمل",                           k:"زيادة معدل التحويل 50-150%", c:"CRO"},
+  AI1:{n:"المساعد الذكي لخدمة العملاء 24/7",        p:"8,000–18,000", d:"7 أيام عمل",  g:"إصلاح مجاني 30 يوماً",                              k:"رد في أقل من 3 ثوانٍ + تقليل الاستفسارات اليدوية 40-60%", c:"AI"},
+  AI2:{n:"الموظف الرقمي الذكي (AI Agent)",          p:"9,000–20,000", d:"7-12 يوم",    g:"ضمان أداء 90 يوماً",                                k:"توفير 15-20 ساعة عمل أسبوعياً", c:"AI"},
+};
+
+/* ══════════════════════════════════════════════════════
+   معاملات ROI [D]
+══════════════════════════════════════════════════════ */
+const MULTS = {
+  SEO:       {v:"V",  cons:1.25, real:1.50, opt:1.80, maxCR:null, time:"60-90 يوم"},
+  Ads:       {v:"V",  cons:1.40, real:1.70, opt:2.20, maxCR:null, time:"7-14 يوم"},
+  CRO:       {v:"CR", cons:1.35, real:1.65, opt:2.00, maxCR:15,   time:"14-30 يوم"},
+  Email:     {v:"R",  cons:1.15, real:1.25, opt:1.40, maxCR:null, time:"7-21 يوم"},
+  Social:    {v:"V",  cons:1.30, real:1.60, opt:2.00, maxCR:null, time:"14-45 يوم"},
+  Analytics: {v:"V",  cons:1.20, real:1.35, opt:1.55, maxCR:null, time:"فوري"},
+  Consulting:{v:"V",  cons:1.15, real:1.25, opt:1.40, maxCR:null, time:"45-90 يوم"},
+  AI:        {v:"CR", cons:1.20, real:1.35, opt:1.55, maxCR:15,   time:"فوري"},
+};
+
+function avgPrice(str) {
+  const clean = str.replace(/,/g,'').replace(/[–—\-]/,'\n');
+  const [a,b] = clean.split('\n').map(Number);
+  return (!b || isNaN(b)) ? (a||0) : (a+b)/2;
+}
+
+function calcROI(V, CR, AOV, id) {
+  const s = SVC[id]; if(!s) return null;
+  const m = MULTS[s.c]; if(!m) return null;
+  const SC = avgPrice(s.p);
+  const R  = V*(CR/100)*AOV;
+  const fmt = x => Math.round(x).toLocaleString('ar-SA');
+
+  function sc(mult) {
+    let Vn=V, CRn=CR, Rn;
+    if(m.v==='V') { Vn=V*mult; Rn=Vn*(CR/100)*AOV; }
+    if(m.v==='CR'){ CRn=Math.min(CR*mult,m.maxCR||99); Rn=V*(CRn/100)*AOV; }
+    if(m.v==='R') { Rn=R*mult; }
+    const Re = Rn-R;
+    const roi = SC>0 ? ((Re*3-SC)/SC*100).toFixed(0) : 0;
+    const be  = Re>0 ? Math.round(SC/(Re/30)) : '—';
+    const vLbl = m.v==='V' ? fmt(Vn)+' زائر'
+               : m.v==='CR'? CRn.toFixed(2)+'%'
+               : fmt(Rn)+' ر';
+    return {vLbl, Re:fmt(Re), roi, be};
+  }
+  return {
+    R:fmt(R), SC:fmt(Math.round(SC)),
+    lbl: m.v==='V'?'الزوار الجديد': m.v==='CR'?'معدل التحويل':'الإيراد الجديد',
+    cons:sc(m.cons), real:sc(m.real), opt:sc(m.opt),
+    time:m.time,
+  };
+}
+
+/* ══════════════════════════════════════════════════════
+   خريطة التوصية [K] — مُوسَّعة لـ 3-5 خدمات
+   
+   كل مسار يحتوي الآن على:
+   [أولوية أولى، مكملة، داعمة، اختيارية...]
+   مرتبة من الأعلى تأثيراً للأقل
+══════════════════════════════════════════════════════ */
+const KMAP = {
+  /* فكرة جديدة */
+  "new-a":{any:   [67,  12,  71]},
+  "new-b":{small: [3,   82,  10],   med: [71, 67, 12,  3],  big:[71, 67, 73, 12]},
+  "new-c":{any:   [71,  9,   67,  67]},
+
+  /* نشاط قائم */
+  "act-a":{small: [3,   10,  82],   med: [1,  35, 16, 10],  big:[16, 40, 35, 34,  1]},
+  "act-b":{small: [52,  44,  9],    med: [43, 59, 52, 44],  big:[107,34, 43, 44, 59]},
+  "act-c":{small: [58,  52,  57],   med: [57, 55, 58, 87],  big:[48, 87, 57, 55, 91]},
+
+  /* شركة راسخة */
+  "est-a":{small: [73,  82,  35],   med: [98, 73, 40, 35],  big:[98, 73, 40, 35, 75]},
+  "est-b":{small: [41,  38,  91],   med: [41, 38, 93, 91],  big:[41, 38, 93, 87, 91]},
+  "est-c":{small: [91,  87,  88],   med: [91, 93, 87, 88],  big:[91, 93, 88, 48, 87]},
+};
+
+function getRecs(type, ch, budget) {
+  const m = KMAP[`${type}-${ch}`];
+  if(!m) return [35,44,52];
+  return (m.any || m[budget] || m.med || m.big || m.small || [35,44]).slice(0,5);
+}
+
+/* ══════════════════════════════════════════════════════
+   حالة المحادثة
+══════════════════════════════════════════════════════ */
+let S = {
+  phase:0, q1:null, q2:null, q3:null,
+  V:null, CR:null, AOV:null, hasWeb:false,
+  usedDefaultCR:false, recs:[], rejections:0, waiting:false,
+};
+
+/* ══════════════════════════════════════════════════════
+   DOM + دوال مساعدة
+══════════════════════════════════════════════════════ */
+const $chat  = document.getElementById('chatArea');
+const $input = document.getElementById('userInput');
+const $send  = document.getElementById('sendBtn');
+const PHASE_LABELS = ['الترحيب','التشخيص','بيانات ROI','التوصية'];
+
+function setPhase(n) {
+  [0,1,2,3].forEach(i=>{
+    const d = document.getElementById('ph'+i);
+    d.className = 'phase-dot'+(i<n?' done':i===n?' active':'');
+  });
+  document.getElementById('phLabel').textContent = PHASE_LABELS[Math.min(n,3)];
+}
+function scrollEnd(){ setTimeout(()=>$chat.scrollTop=$chat.scrollHeight, 80); }
+function showTyping(){
+  const r=document.createElement('div');
+  r.className='typing-row'; r.id='typing';
+  r.innerHTML=`<div class="msg-avatar">🤖</div><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
+  $chat.appendChild(r); scrollEnd();
+}
+function hideTyping(){ const t=document.getElementById('typing'); if(t)t.remove(); }
+
+function addMsg(html, isBot=true, replies=[], formHtml='') {
+  hideTyping();
+  const row=document.createElement('div');
+  row.className='msg-row'+(isBot?'':' user');
+  const av=document.createElement('div');
+  av.className='msg-avatar'+(isBot?'':' user-av');
+  av.textContent=isBot?'🤖':'👤';
+  const bub=document.createElement('div');
+  bub.className='bubble '+(isBot?'bot':'user');
+  bub.innerHTML=html+(isBot?formHtml:'');
+  if(isBot){row.append(av,bub);}else{row.append(bub,av);}
+  $chat.appendChild(row);
+  if(replies.length){
+    const qr=document.createElement('div');
+    qr.className='quick-replies';
+    replies.forEach(r=>{
+      const btn=document.createElement('button');
+      btn.className='qr-btn'; btn.textContent=r.label;
+      btn.addEventListener('click',()=>handleQR(r,btn,qr));
+      qr.appendChild(btn);
+    });
+    $chat.appendChild(qr);
+  }
+  scrollEnd();
+}
+
+function botMsg(html, delay=600, replies=[], formHtml='') {
+  S.waiting=true; $input.disabled=true; $send.disabled=true;
+  showTyping();
+  setTimeout(()=>{
+    addMsg(html,true,replies,formHtml);
+    S.waiting=false; $input.disabled=false; $send.disabled=false;
+    $input.focus();
+  }, delay);
+}
+function userMsg(t){ addMsg(t,false); }
+
+function handleQR(r,btn,qr){
+  if(btn.disabled)return;
+  qr.querySelectorAll('.qr-btn').forEach(b=>b.disabled=true);
+  btn.classList.add('selected');
+  userMsg(r.label);
+  setTimeout(r.action, 300);
+}
+
+/* ══════════════════════════════════════════════════════
+   ─── الحل الجذري لمشكلة الأزرار ───
+   
+   بدلاً من onclick="" داخل innerHTML (الذي
+   يفشل في بعض السياقات)، نستخدم Event
+   Delegation واحداً على $chat يستمع لكل
+   الأحداث ويُوجّهها بناءً على data-action.
+   
+   هذا يعني:
+   - لا إعادة تسجيل عند كل رسالة جديدة
+   - يعمل 100% مع الـ HTML المُحقَن ديناميكياً
+   - أداء أفضل بكثير من handlers منفردة
+══════════════════════════════════════════════════════ */
+$chat.addEventListener('click', function(e) {
+  const target = e.target.closest('[data-action]');
+  if(!target) return;
+  const action = target.dataset.action;
+
+  switch(action) {
+    case 'web-yes':
+      S.hasWeb = true;
+      document.querySelectorAll('.roi-toggle-btn').forEach(b=>{
+        b.classList.toggle('active', b.dataset.action==='web-yes');
+      });
+      break;
+    case 'web-no':
+      S.hasWeb = false;
+      document.querySelectorAll('.roi-toggle-btn').forEach(b=>{
+        b.classList.toggle('active', b.dataset.action==='web-no');
+      });
+      break;
+    case 'roi-submit':
+      submitROI();
+      break;
+  }
+});
+
+/* ══════════════════════════════════════════════════════
+   مسار المحادثة
+══════════════════════════════════════════════════════ */
+function start(){
+  setPhase(0);
+  botMsg(`مرحباً! 👋 أنا <strong>مهندس النمو الرقمي</strong>.<br><br>
+سأساعدك في اختيار أفضل 3-5 خدمات تناسب وضعك تحديداً — <strong>بالأرقام لا بالتخمين</strong>.<br><br>
+3 أسئلة سريعة، ثم حساب العائد المتوقع بالريال السعودي.`,
+  800,[
+    {label:'✅ نعم، ابدأ',            action:askQ1},
+    {label:'🤝 أريد التحدث مع إنسان', action:talkHuman},
+  ]);
+}
+
+function askQ1(){
+  S.phase=1; setPhase(1);
+  botMsg(`🏢 <strong>السؤال 1 من 3:</strong><br>ما نوع عملك الحالي؟`,500,[
+    {label:'💡 فكرة جديدة — لم تُطلق بعد',     action:()=>setQ1('new')},
+    {label:'🌱 نشاط قائم — أقل من سنتين',       action:()=>setQ1('act')},
+    {label:'🏛️ شركة راسخة — أكثر من 3 سنوات',  action:()=>setQ1('est')},
+  ]);
+}
+function setQ1(v){S.q1=v; askQ2();}
+
+function askQ2(){
+  const opts={
+    new:{t:'ما أكبر عائق أمامك الآن؟',c:[
+      {label:'🔍 لا أعرف إن كانت الفكرة مجدية',  action:()=>setQ2('a')},
+      {label:'🗺️ لا أعرف الخطوات العملية للبدء', action:()=>setQ2('b')},
+      {label:'📋 أحتاج خطة عمل واضحة',            action:()=>setQ2('c')},
+    ]},
+    act:{t:'ما أكبر تحدٍ تواجهه الآن؟',c:[
+      {label:'👁️ لا أحد يعرف بوجودي — مشكلة ظهور', action:()=>setQ2('a')},
+      {label:'🛒 زوار كثيرون لكن لا مبيعات',          action:()=>setQ2('b')},
+      {label:'📉 مبيعات غير مستقرة — مشكلة نظام',    action:()=>setQ2('c')},
+    ]},
+    est:{t:'ما الأولوية الأهم لديك الآن؟',c:[
+      {label:'📈 توسيع الحصة السوقية',              action:()=>setQ2('a')},
+      {label:'💰 تقليل تكلفة اكتساب العميل (CAC)',  action:()=>setQ2('b')},
+      {label:'⚙️ بناء نظام مبيعات قابل للقياس',    action:()=>setQ2('c')},
+    ]},
+  };
+  const o=opts[S.q1];
+  botMsg(`🎯 <strong>السؤال 2 من 3:</strong><br>${o.t}`,500,o.c);
+}
+function setQ2(v){S.q2=v; askQ3();}
+
+function askQ3(){
+  botMsg(`💰 <strong>السؤال 3 من 3:</strong><br>ما ميزانيتك الشهرية للتسويق؟`,500,[
+    {label:'🟡 أقل من 5,000 ريال',   action:()=>setQ3('small')},
+    {label:'🔵 5,000 — 15,000 ريال', action:()=>setQ3('med')},
+    {label:'🟢 أكثر من 15,000 ريال', action:()=>setQ3('big')},
+  ]);
+}
+function setQ3(v){S.q3=v; S.phase=2; setPhase(2); askROI();}
+
+/* ══════════════════════════════════════════════════════
+   نموذج ROI — بدون أي onclick=""
+   كل الأزرار تستخدم data-action ويُعالجها
+   الـ event listener المركزي أعلاه
+══════════════════════════════════════════════════════ */
+function askROI(){
+  S.hasWeb = false; // القيمة الافتراضية: لا موقع
+
+  const formHtml = `
+    <div class="roi-form" id="roiForm">
+
+      <div class="roi-field">
+        <label>1️⃣ عدد الزوار الشهريين للموقع</label>
+        <div class="field-wrap">
+          <input type="number" id="fV" min="0" step="1"
+                 placeholder="مثال: 2000 — أدخل 0 إذا لم يكن لديك موقع"/>
+          <span class="unit">زائر/شهر</span>
+        </div>
+      </div>
+
+      <div class="roi-field">
+        <label>2️⃣ معدل التحويل الحالي</label>
+        <div class="field-wrap">
+          <input type="number" id="fCR" min="0" max="100" step="0.1"
+                 placeholder="مثال: 1.5 — اتركه فارغاً إذا لم تعرف"/>
+          <span class="unit">%</span>
+        </div>
+        <span class="field-hint">إذا تركته فارغاً سنستخدم 1.5% (متوسط السوق السعودي)</span>
+      </div>
+
+      <div class="roi-field">
+        <label>3️⃣ متوسط قيمة الطلب أو الخدمة الواحدة</label>
+        <div class="field-wrap">
+          <input type="number" id="fAOV" min="0" step="1"
+                 placeholder="مثال: 500"/>
+          <span class="unit">ريال</span>
+        </div>
+      </div>
+
+      <div class="roi-field">
+        <label>4️⃣ هل لديك موقع إلكتروني فعلي؟</label>
+        <div class="roi-toggle">
+          <button class="roi-toggle-btn" data-action="web-yes">✅ نعم، لديّ موقع</button>
+          <button class="roi-toggle-btn active" data-action="web-no">❌ لا، أنشط على السوشيال فقط</button>
+        </div>
+      </div>
+
+      <div class="roi-error" id="roiErr"></div>
+
+      <button class="roi-submit" data-action="roi-submit">🔢 احسب العائد المتوقع</button>
+    </div>`;
+
+  botMsg(
+    `🔢 ممتاز! لأعطيك أرقاماً دقيقة أحتاج 4 معطيات:<br>
+     <span style="font-size:11px;color:var(--text-muted)">⚠️ البيانات للحساب فقط ولن تُحفظ.</span>`,
+    700, [], formHtml
+  );
+}
+
+function submitROI(){
+  const errEl = document.getElementById('roiErr');
+  errEl.classList.remove('show');
+
+  const vRaw   = document.getElementById('fV').value.trim();
+  const crRaw  = document.getElementById('fCR').value.trim();
+  const aovRaw = document.getElementById('fAOV').value.trim();
+
+  // V يقبل 0 (نشاط بدون موقع)
+  const V   = vRaw==='' ? 0 : parseFloat(vRaw);
+  // CR فارغ = 1.5% افتراضي
+  const CR  = crRaw==='' ? null : parseFloat(crRaw);
+  // AOV هو الوحيد الإلزامي
+  const AOV = parseFloat(aovRaw);
+
+  if(aovRaw==='' || isNaN(AOV) || AOV<=0){
+    errEl.textContent='⚠️ يرجى إدخال متوسط قيمة الطلب — هذا الحقل إلزامي لحساب العائد';
+    errEl.classList.add('show');
+    document.getElementById('fAOV').focus();
+    return;
+  }
+
+  // CR مرتفع جداً — نستفسر
+  if(CR!==null && CR>20){
+    document.querySelector('[data-action="roi-submit"]').disabled=true;
+    botMsg(
+      `معدل التحويل ${CR}% مرتفع جداً عن المعتاد.<br>
+       هل تقصد فعلاً أن <strong>${CR}</strong> من كل 100 زائر يُكملون شراءً؟`,
+      500,[
+        {label:`نعم، ${CR}% صحيح`,         action:()=>finishROI(V,CR,AOV)},
+        {label:'لا، استخدم 1.5% افتراضي',  action:()=>finishROI(V,1.5,AOV,true)},
+      ]
+    );
+    return;
+  }
+
+  finishROI(V, CR??1.5, AOV, CR===null);
+}
+
+function finishROI(V, CR, AOV, usedDefault=false){
+  S.V=V; S.CR=CR; S.AOV=AOV; S.usedDefaultCR=usedDefault;
+
+  if(V===0 && !S.hasWeb){
+    botMsg(
+      `لا مشكلة! سنبني التوصية على نوع تحديك مباشرة.<br>
+       📌 الخدمات الموصى بها ستركز على <strong>بناء الوعي وجذب الزوار</strong> أولاً.`,
+      500
+    );
+    setTimeout(showResult, 950);
+    return;
+  }
+  showResult();
+}
+
+/* ══════════════════════════════════════════════════════
+   عرض التوصية — 3 إلى 5 خدمات
+══════════════════════════════════════════════════════ */
+function showResult(){
+  S.phase=3; setPhase(3);
+  const ids=getRecs(S.q1,S.q2,S.q3);
+  S.recs=ids;
+
+  const TL={new:'فكرة جديدة',  act:'نشاط قائم', est:'شركة راسخة'};
+  const CL={
+    a: S.q1==='new'?'لا أعرف جدوى الفكرة': S.q1==='act'?'ضعف الظهور والوعي':'التوسع في السوق',
+    b: S.q1==='new'?'لا أعرف كيف أبدأ':    S.q1==='act'?'زوار بلا مبيعات':   'تقليل تكلفة الاكتساب',
+    c: S.q1==='new'?'أحتاج خطة عمل':        S.q1==='act'?'مبيعات غير مستقرة': 'بناء نظام مبيعات',
+  };
+  const BL={small:'أقل من 5,000 ر', med:'5,000–15,000 ر', big:'أكثر من 15,000 ر'};
+
+  const V=S.V||0, CR=S.CR||1.5, AOV=S.AOV||0;
+  const R=Math.round(V*(CR/100)*AOV);
+
+  /* ── تعريفات الشارات حسب الترتيب ── */
+  const BADGES=[
+    {cls:'badge-gold',   icon:'🥇', lbl:'الأولوية الأولى — الأعلى تأثيراً'},
+    {cls:'badge-silver', icon:'🥈', lbl:'مكمّلة — تُضاعف أثر الأولى'},
+    {cls:'badge-supp',   icon:'🥉', lbl:'داعمة — تُعجّل النتائج'},
+    {cls:'badge-supp',   icon:'4️⃣', lbl:'توسعية — بعد تثبيت النتائج'},
+    {cls:'badge-supp',   icon:'5️⃣', lbl:'استراتيجية — للمرحلة التالية'},
+  ];
+
+  function svcCard(id, idx){
+    const s=SVC[id]; if(!s)return '';
+    const roi = calcROI(V,CR,AOV,id);
+    const b = BADGES[idx] || BADGES[2];
+    const priorityClass = idx===0?'priority-1':idx===1?'priority-2':'';
+
+    // جدول ROI فقط للخدمات الأولى والثانية وإذا كانت البيانات كافية
+    let table='';
+    if(roi && V>0 && AOV>0 && idx<3){
+      table=`
+        <table class="roi-table" style="margin-top:10px">
+          <tr>
+            <th></th>
+            <th><span class="stag s-cons">محافظ</span></th>
+            <th><span class="stag s-real">واقعي</span></th>
+            <th><span class="stag s-opt">متفائل</span></th>
+          </tr>
+          <tr>
+            <td class="rl">${roi.lbl}</td>
+            <td>${roi.cons.vLbl}</td><td>${roi.real.vLbl}</td><td>${roi.opt.vLbl}</td>
+          </tr>
+          <tr>
+            <td class="rl">إيراد إضافي/شهر</td>
+            <td>${roi.cons.Re} ر</td><td>${roi.real.Re} ر</td><td>${roi.opt.Re} ر</td>
+          </tr>
+          <tr>
+            <td class="rl">ROI (90 يوم)</td>
+            <td>${roi.cons.roi}%</td><td>${roi.real.roi}%</td><td>${roi.opt.roi}%</td>
+          </tr>
+          <tr>
+            <td class="rl">نقطة التعادل</td>
+            <td>${roi.cons.be} يوم</td><td>${roi.real.be} يوم</td><td>${roi.opt.be} يوم</td>
+          </tr>
+        </table>
+        <div class="note">⚠️ أرقام تقديرية بناءً على معدلات السوق السعودي 2026. تعتمد النتائج على جودة التنفيذ والمنافسة.</div>`;
+    }
+    return `
+      <div class="svc-card ${priorityClass}">
+        <div class="${b.cls}">${b.icon} ${b.lbl}</div>
+        <div class="sct">الخدمة #${id}: ${s.n}</div>
+        <div class="scr">📌 <span>${s.k}</span></div>
+        <div class="scr">💰 الاستثمار: <span>${s.p} ريال</span></div>
+        <div class="scr">⏱️ المدة: <span>${s.d}</span></div>
+        <div class="scr">🛡️ الضمان: <span>${s.g}</span></div>
+        ${roi?`<div class="scr">⚡ أول نتيجة: <span>خلال ${roi.time}</span></div>`:''}
+        ${table}
+      </div>`;
+  }
+
+  const defNote = S.usedDefaultCR
+    ? `<div class="note">📌 استخدمنا 1.5% كمعدل تحويل افتراضي — أدخل معدلك الفعلي لحسابات أدق.</div>` : '';
+  const noData = (V===0||AOV===0)
+    ? `<div class="note">📌 جداول ROI غير متاحة لعدم كفاية البيانات — التوصية مبنية على نوع التحدي.</div>` : '';
+
+  let cardsHtml = ids.map((id,i)=>svcCard(id,i)).join('');
+
+  const html=`🎯 <strong>خطتك التسويقية المقترحة (${ids.length} خدمات):</strong>
+
+<span class="sec">📊 وضعك الحالي</span>
+• نوع العمل: <strong>${TL[S.q1]}</strong><br>
+• التحدي: <strong>${CL[S.q2]}</strong><br>
+• الميزانية: <strong>${BL[S.q3]}</strong><br>
+• الإيراد الرقمي المقدَّر: <strong>${R.toLocaleString('ar-SA')} ريال/شهر</strong>
+${defNote}${noData}
+
+<span class="sec">🗂️ الخدمات الموصى بها</span>
+${cardsHtml}
+<span class="sec">🚀 ما التالي؟</span>`;
+
+  botMsg(html, 1000,[
+    {label:'📋 أريد عرض سعر تفصيلي',   action:offerQuote},
+    {label:'💬 تحدث مع مستشار الآن',    action:talkHuman},
+    {label:'🔄 أعد التشخيص من البداية', action:resetFlow},
+  ]);
+}
+
+/* ══════════════════════════════════════════════════════
+   حالات خاصة [H]
+══════════════════════════════════════════════════════ */
+function offerQuote(){
+  botMsg(`ممتاز! 🎉 سيصلك العرض خلال ساعتين يشمل:<br>
+✅ الأسعار النهائية + جدول التنفيذ + عقد العمل<br><br>
+<strong>أفضل طريقة للتواصل معك؟</strong>`,
+  500,[
+    {label:'📱 واتساب',           action:()=>confirmContact('واتساب')},
+    {label:'📧 البريد الإلكتروني', action:()=>confirmContact('البريد الإلكتروني')},
+    {label:'📞 مكالمة هاتفية',    action:()=>confirmContact('مكالمة هاتفية')},
+  ]);
+}
+function confirmContact(m){
+  botMsg(`شكراً! سيتواصل معك فريقنا عبر <strong>${m}</strong> في أقرب وقت.<br>⏰ السبت–الخميس، 9ص–6م 🙏`,500);
+}
+function talkHuman(){
+  botMsg(`بكل سرور! 🤝<br><br>📱 <strong>واتساب:</strong> [رقم الشركة]<br>📧 <strong>البريد:</strong> [بريد الشركة]<br>⏰ السبت–الخميس، 9ص–6م<br><br>أو اترك رقمك هنا وسيتصل بك مستشارنا خلال 30 دقيقة.`,500);
+}
+function resetFlow(){
+  S={phase:0,q1:null,q2:null,q3:null,V:null,CR:null,AOV:null,hasWeb:false,usedDefaultCR:false,recs:[],rejections:0,waiting:false};
+  botMsg(`بالطبع! لنبدأ من جديد 🎯`,400,[{label:'✅ ابدأ التشخيص',action:askQ1}]);
+}
+
+/* ══════════════════════════════════════════════════════
+   معالج النص الحر
+══════════════════════════════════════════════════════ */
+function sendMessage(){
+  const txt=$input.value.trim();
+  if(!txt||S.waiting)return;
+  $input.value='';
+  userMsg(txt);
+  if(/إنسان|بشر|مستشار|واتساب|تواصل/i.test(txt)){talkHuman();return;}
+  if(/من جديد|ابدأ|إعادة|reset/i.test(txt)){resetFlow();return;}
+  if(/سعر|كم|تكلفة/i.test(txt)){
+    botMsg(`يسعدني! سؤال واحد سريع: <strong>ما الهدف الذي تريد تحقيقه؟</strong><br>لأن نفس الخدمة قد تكون استثماراً ذكياً لحالة وإنفاقاً زائداً لأخرى.`,600,[
+      {label:'✅ ابدأ التشخيص أولاً',      action:askQ1},
+      {label:'💬 تواصل مع فريقنا مباشرة',  action:talkHuman},
+    ]);
+    return;
+  }
+  if(S.phase===3){
+    S.rejections++;
+    if(S.rejections>=2){talkHuman();return;}
+    botMsg(`أفهم — ما الذي لم يناسبك تحديداً؟`,500,[
+      {label:'💸 السعر مرتفع',            action:()=>botMsg('سنجد لك بديلاً أقل تكلفة في نفس الفئة.',500,[{label:'🔄 أعد التشخيص',action:resetFlow}])},
+      {label:'⏳ المدة طويلة',            action:()=>botMsg('الخدمات الإعلانية تُعطي نتائج خلال 7-14 يوم.',500,[{label:'🔄 أعد التشخيص',action:resetFlow}])},
+      {label:'❓ لا تحل مشكلتي',          action:resetFlow},
+      {label:'🤝 أريد التحدث مع إنسان',   action:talkHuman},
+    ]);
+    return;
+  }
+  if(S.phase===0){
+    botMsg('مرحباً! هل أنت مستعد للبدء؟',400,[
+      {label:'✅ نعم، ابدأ',action:askQ1},
+      {label:'🤝 تحدث معنا',action:talkHuman},
+    ]);
+    return;
+  }
+  botMsg(`شكراً على رسالتك! كيف يمكنني مساعدتك؟`,500,[
+    {label:'🔄 أعد التشخيص', action:resetFlow},
+    {label:'💬 تحدث مع مستشار',action:talkHuman},
+  ]);
+}
+
+$send.addEventListener('click', sendMessage);
+$input.addEventListener('keydown', e=>{
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}
+});
+
+window.addEventListener('load',()=>setTimeout(start,300));
+</script>
+</body>
+</html>
