@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مهندس أنظمة النمو الرقمي</title>
+<style>
+:root {
+  --navy:#1a2e4a; --blue:#2563eb; --gold:#d97706; --gold-lt:#fef3c7;
+  --green:#16a34a; --red:#dc2626; --bg:#f1f5f9; --card:#ffffff;
+  --border:#e2e8f0; --text:#1e293b; --muted:#64748b;
+  --radius:12px; --shadow:0 4px 24px rgba(0,0,0,.08);
+  --shadow-hover:0 8px 32px rgba(37,99,235,.18);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.7}
+h1{font-size:clamp(1.7rem,4vw,2.6rem);line-height:1.3;font-weight:800}
+h2{font-size:clamp(1.3rem,3vw,1.9rem);font-weight:700}
+h3{font-size:1.1rem;font-weight:700}
+p{color:var(--muted);font-size:.97rem}
+.container{max-width:900px;margin:0 auto;padding:0 20px}
+.screen{display:none}
+.screen.active{display:block}
+.fade-in{animation:fadeIn .4s ease forwards}
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* Progress */
+#progress-wrap{background:var(--card);border-bottom:1px solid var(--border);padding:16px 0;position:sticky;top:0;z-index:100;display:none}
+#progress-wrap.visible{display:block}
+.prog-inner{display:flex;align-items:center;gap:16px;max-width:900px;margin:0 auto;padding:0 20px}
+.prog-bar{flex:1;height:8px;background:#e2e8f0;border-radius:99px;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--blue),#6366f1);border-radius:99px;transition:width .4s ease}
+.prog-label{font-size:.82rem;color:var(--muted);white-space:nowrap;min-width:90px;text-align:center}
+
+/* Hero */
+#hero{min-height:100vh;display:flex;align-items:center;background:linear-gradient(135deg,var(--navy) 0%,#1e3a8a 60%,#1a2e4a 100%);position:relative;overflow:hidden}
+#hero::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
+.hero-content{position:relative;z-index:2;text-align:center;padding:60px 20px;max-width:700px;margin:0 auto}
+.hero-badge{display:inline-block;background:rgba(255,255,255,.12);color:#93c5fd;border:1px solid rgba(255,255,255,.2);border-radius:99px;padding:6px 18px;font-size:.82rem;margin-bottom:24px;letter-spacing:.5px}
+.hero-content h1{color:#fff;margin-bottom:16px}
+.hero-content p{color:#93c5fd;font-size:1.05rem;margin-bottom:36px;max-width:520px;margin-left:auto;margin-right:auto}
+.hero-stats{display:flex;justify-content:center;gap:40px;margin-bottom:44px;flex-wrap:wrap}
+.hero-stat{text-align:center}
+.hero-stat strong{display:block;color:#fff;font-size:1.6rem;font-weight:800}
+.hero-stat span{color:#93c5fd;font-size:.8rem}
+
+/* Buttons */
+.btn-primary{display:inline-block;background:linear-gradient(135deg,var(--gold),#f59e0b);color:#fff;border:none;cursor:pointer;padding:16px 40px;border-radius:99px;font-size:1.05rem;font-weight:700;font-family:inherit;transition:transform .2s,box-shadow .2s;box-shadow:0 8px 24px rgba(217,119,6,.4);text-decoration:none}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(217,119,6,.5)}
+.btn-secondary{display:inline-block;background:transparent;color:var(--blue);border:2px solid var(--blue);cursor:pointer;padding:12px 28px;border-radius:99px;font-size:.95rem;font-weight:600;font-family:inherit;transition:all .2s;text-decoration:none}
+.btn-secondary:hover{background:var(--blue);color:#fff}
+.btn-outline{display:inline-block;background:var(--card);color:var(--text);border:1.5px solid var(--border);cursor:pointer;padding:11px 24px;border-radius:99px;font-size:.9rem;font-weight:500;font-family:inherit;transition:all .2s}
+.btn-outline:hover{border-color:var(--blue);color:var(--blue)}
+
+/* Steps */
+#steps-screen{padding:40px 0 60px}
+.step-header{text-align:center;margin-bottom:36px}
+.step-header h2{color:var(--navy);margin-bottom:8px}
+
+/* Cards */
+.choices-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:28px}
+.choices-grid.cols-2{grid-template-columns:repeat(2,1fr)}
+.choices-grid.cols-1{grid-template-columns:1fr}
+.choices-grid.cols-5{grid-template-columns:repeat(5,1fr)}
+@media(max-width:640px){.choices-grid{grid-template-columns:repeat(2,1fr)}.choices-grid.cols-5{grid-template-columns:repeat(3,1fr)}.choices-grid.cols-1{grid-template-columns:1fr}}
+@media(max-width:420px){.choices-grid{grid-template-columns:1fr}.choices-grid.cols-5{grid-template-columns:repeat(2,1fr)}}
+
+.choice-card{background:var(--card);border:2px solid var(--border);border-radius:var(--radius);padding:20px 16px;text-align:center;cursor:pointer;transition:all .2s;position:relative}
+.choice-card:hover{border-color:var(--blue);box-shadow:var(--shadow-hover)}
+.choice-card.selected{border-color:var(--blue);background:linear-gradient(135deg,#eff6ff,#dbeafe);box-shadow:var(--shadow-hover)}
+.choice-card.selected::after{content:'✓';position:absolute;top:10px;left:10px;width:22px;height:22px;background:var(--blue);color:#fff;border-radius:50%;font-size:.75rem;display:flex;align-items:center;justify-content:center;font-weight:700}
+.choice-icon{font-size:1.8rem;margin-bottom:8px}
+.choice-label{font-weight:700;color:var(--navy);font-size:.95rem;margin-bottom:4px}
+.choice-sub{font-size:.78rem;color:var(--muted)}
+
+/* Inputs */
+.inputs-grid{display:grid;gap:18px;margin-bottom:28px}
+.input-group{background:var(--card);border-radius:var(--radius);padding:20px;border:1.5px solid var(--border)}
+.input-group label{display:block;font-weight:600;color:var(--navy);margin-bottom:6px;font-size:.95rem}
+.input-group .help{font-size:.8rem;color:var(--muted);margin-bottom:10px}
+.input-group input{width:100%;padding:12px 16px;border:1.5px solid var(--border);border-radius:8px;font-size:1rem;font-family:inherit;transition:border-color .2s;color:var(--text);background:var(--bg)}
+.input-group input:focus{outline:none;border-color:var(--blue);background:#fff}
+.input-group input:disabled{opacity:.6;cursor:not-allowed}
+.toggle-group{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+.toggle-btn{padding:10px 20px;border-radius:99px;border:1.5px solid var(--border);background:var(--bg);cursor:pointer;font-family:inherit;font-size:.9rem;font-weight:500;transition:all .2s;color:var(--text)}
+.toggle-btn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.link-btn{background:none;border:none;color:var(--blue);cursor:pointer;font-size:.82rem;text-decoration:underline;font-family:inherit;margin-top:8px;padding:0}
+.error-msg{color:var(--red);font-size:.78rem;margin-top:6px;display:none;padding:8px 12px;background:#fef2f2;border-radius:6px}
+.error-msg.visible{display:block}
+
+/* Navigation */
+.step-nav{display:flex;justify-content:space-between;align-items:center;margin-top:28px;flex-wrap:wrap;gap:12px}
+.btn-next{background:linear-gradient(135deg,var(--blue),#6366f1);color:#fff;border:none;cursor:pointer;padding:14px 36px;border-radius:99px;font-size:1rem;font-weight:700;font-family:inherit;transition:all .2s;opacity:.4;pointer-events:none;box-shadow:0 4px 16px rgba(37,99,235,.3)}
+.btn-next.enabled{opacity:1;pointer-events:all}
+.btn-next.enabled:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(37,99,235,.4)}
+.btn-back{background:none;border:none;color:var(--muted);cursor:pointer;font-family:inherit;font-size:.9rem;display:flex;align-items:center;gap:6px;padding:0;transition:color .2s}
+.btn-back:hover{color:var(--text)}
+
+/* Loading */
+#loading-screen{min-height:80vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 20px}
+.loader-ring{width:80px;height:80px;border:6px solid #e2e8f0;border-top-color:var(--blue);border-radius:50%;animation:spin 1s linear infinite;margin-bottom:32px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:1.15rem;color:var(--navy);font-weight:600;min-height:2em;transition:opacity .2s}
+
+/* Results */
+#results-screen{padding:40px 0 80px}
+.summary-card{background:linear-gradient(135deg,var(--navy),#1e3a8a);border-radius:var(--radius);padding:28px;color:#fff;margin-bottom:32px}
+.summary-card h2{color:#fff;margin-bottom:16px;font-size:1.3rem}
+.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:500px){.summary-grid{grid-template-columns:1fr}}
+.summary-item{background:rgba(255,255,255,.1);border-radius:8px;padding:12px 16px}
+.summary-item .s-label{font-size:.75rem;color:#93c5fd;margin-bottom:2px}
+.summary-item .s-value{font-weight:700;font-size:.95rem;color:#fff}
+.summary-alert{background:#fef3c7;border:1.5px solid var(--gold);border-radius:8px;padding:12px 16px;margin-top:16px}
+.summary-alert p{color:#92400e;font-size:.83rem}
+.summary-alert a{color:var(--blue);cursor:pointer;text-decoration:underline}
+.results-title{text-align:center;margin-bottom:28px}
+.results-title h2{color:var(--navy)}
+
+/* Service cards */
+.service-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);margin-bottom:20px;overflow:hidden;box-shadow:var(--shadow);transition:box-shadow .2s}
+.service-card:hover{box-shadow:0 8px 32px rgba(0,0,0,.12)}
+.sc-header{padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:16px}
+.sc-priority{font-size:.72rem;font-weight:700;padding:4px 10px;border-radius:99px;white-space:nowrap;flex-shrink:0;margin-top:2px}
+.pr-now{background:#dcfce7;color:#15803d}
+.pr-30{background:#dbeafe;color:#1d4ed8}
+.pr-60{background:#f3e8ff;color:#7c3aed}
+.pr-90{background:#fff7ed;color:#c2410c}
+.sc-num{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--blue),#6366f1);color:#fff;font-weight:800;font-size:.85rem;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sc-title{flex:1}
+.sc-title h3{color:var(--navy);margin-bottom:2px}
+.sc-title .sc-cat{font-size:.75rem;color:var(--muted)}
+.sc-body{padding:20px 24px}
+.sc-section-title{font-size:.75rem;font-weight:700;text-transform:uppercase;color:var(--muted);letter-spacing:.5px;margin-bottom:6px}
+.sc-why{margin-bottom:14px}
+.sc-why p{font-size:.92rem;color:var(--text)}
+.sc-gain{background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1px solid #86efac;border-radius:8px;padding:12px 16px;margin-bottom:16px}
+.sc-gain .sc-section-title{color:#15803d}
+.sc-gain p{color:#14532d;font-weight:600;font-size:.92rem}
+.sc-meta{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+.sc-meta-item{font-size:.82rem;color:var(--muted)}
+.sc-meta-item strong{color:var(--text);font-weight:600}
+.sc-guarantee{background:var(--gold-lt);border-radius:6px;padding:8px 12px;font-size:.8rem;color:#92400e;margin-bottom:18px}
+.btn-service{width:100%;padding:14px;background:linear-gradient(135deg,var(--blue),#6366f1);color:#fff;border:none;border-radius:8px;font-size:.95rem;font-weight:700;font-family:inherit;cursor:pointer;transition:all .2s}
+.btn-service:hover{opacity:.9;transform:translateY(-1px)}
+
+/* Impact */
+.impact-box{background:linear-gradient(135deg,#0f172a,#1e3a8a);border-radius:var(--radius);padding:36px 28px;text-align:center;margin:32px 0;box-shadow:0 8px 40px rgba(0,0,0,.2)}
+.impact-box h3{color:#93c5fd;font-size:.85rem;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px}
+.impact-numbers{display:flex;justify-content:center;gap:40px;flex-wrap:wrap;margin:20px 0}
+.impact-num{text-align:center}
+.impact-num strong{display:block;color:#fff;font-size:1.8rem;font-weight:800}
+.impact-num span{color:#93c5fd;font-size:.8rem}
+.impact-range{color:#e2e8f0;font-size:.92rem;margin:12px 0}
+.impact-disclaimer{color:#64748b;font-size:.75rem;margin-top:16px;line-height:1.6}
+
+/* Edit section */
+.edit-section{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:24px;margin:28px 0}
+.edit-section h3{color:var(--navy);margin-bottom:16px;font-size:1rem}
+.edit-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)}
+.edit-row:last-child{border:none}
+.edit-row .er-label{color:var(--muted);font-size:.82rem}
+.edit-row .er-value{font-weight:600;color:var(--text);font-size:.88rem;flex:1;text-align:center}
+.edit-row .er-btn{background:none;border:1px solid var(--border);color:var(--blue);cursor:pointer;font-family:inherit;font-size:.75rem;padding:4px 10px;border-radius:99px;transition:all .2s}
+.edit-row .er-btn:hover{background:var(--blue);color:#fff;border-color:var(--blue)}
+
+/* CTA */
+.cta-section{text-align:center;padding:36px 0;border-top:1px solid var(--border);margin-top:16px}
+.cta-section h3{color:var(--navy);margin-bottom:8px}
+.cta-section p{margin-bottom:24px}
+.cta-buttons{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.cta-reset{background:none;border:none;color:var(--muted);cursor:pointer;font-family:inherit;font-size:.82rem;text-decoration:underline}
+.cta-reset:hover{color:var(--text)}
+
+/* Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--card);border-radius:var(--radius);padding:36px;max-width:480px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.modal h2{color:var(--navy);margin-bottom:8px}
+.modal p{margin-bottom:24px;font-size:.92rem}
+.modal-close{float:left;background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--muted);line-height:1}
+.modal .input-group{margin-bottom:12px}
+
+@media(max-width:640px){
+  .sc-header{flex-wrap:wrap;gap:10px}
+  .impact-numbers{gap:20px}
+  .cta-buttons{flex-direction:column;align-items:center}
+  .cta-buttons .btn-primary,.cta-buttons .btn-secondary,.cta-buttons .btn-outline{width:100%;max-width:300px;text-align:center}
+}
+</style>
+</head>
+<body>
+
+<div id="progress-wrap">
+  <div class="prog-inner">
+    <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+    <div class="prog-label" id="prog-label">خطوة 0 من 5</div>
+  </div>
+</div>
+
+<div id="hero-screen" class="screen active">
+  <div id="hero">
+    <div class="hero-content fade-in">
+      <span class="hero-badge">إصدار 2026-Q1 — السوق السعودي</span>
+      <h1>اكتشف الخدمات التي تناسب عملك بالضبط<br>— بالأرقام لا بالتخمين</h1>
+      <p>5 خطوات سريعة تكشف أين أنت الآن وما الذي يحرك نمو عملك فعلاً</p>
+      <div class="hero-stats">
+        <div class="hero-stat"><strong>5</strong><span>دقائق فقط</span></div>
+        <div class="hero-stat"><strong>مجاناً</strong><span>بلا التزام</span></div>
+        <div class="hero-stat"><strong>ROI</strong><span>محسوب بالريال</span></div>
+      </div>
+      <button class="btn-primary" onclick="startDiagnostic()">ابدأ التشخيص الآن — مجاناً</button>
+    </div>
+  </div>
+</div>
+
+<div id="steps-screen" class="screen">
+  <div class="container">
+    <div id="step-container" class="fade-in"></div>
+    <div class="step-nav">
+      <button class="btn-back" id="btn-back" onclick="goBack()">&#8594; رجوع</button>
+      <button class="btn-next" id="btn-next" onclick="goNext()">التالي &#8592;</button>
+    </div>
+  </div>
+</div>
+
+<div id="loading-screen" class="screen">
+  <div class="loader-ring"></div>
+  <div class="loading-text" id="loading-text">نراجع بياناتك...</div>
+</div>
+
+<div id="results-screen" class="screen">
+  <div class="container fade-in" id="results-container"></div>
+</div>
+
+<div class="modal-overlay" id="contact-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <h2>يسعدنا التحدث معك مباشرة</h2>
+    <p>مستشارنا سيتواصل معك خلال ساعات العمل — عادةً في أقل من 4 ساعات.</p>
+    <div class="input-group"><label>اسمك الكريم</label><input type="text" id="contact-name" placeholder="أدخل اسمك"></div>
+    <div class="input-group"><label>رقم الجوال</label><input type="tel" id="contact-phone" placeholder="05XXXXXXXX"></div>
+    <div class="input-group">
+      <label>أفضل وقت للتواصل</label>
+      <div class="toggle-group">
+        <button class="toggle-btn" onclick="this.classList.toggle('active')">صباح 8-12</button>
+        <button class="toggle-btn" onclick="this.classList.toggle('active')">ظهر 12-4</button>
+        <button class="toggle-btn" onclick="this.classList.toggle('active')">مساء 4-8</button>
+      </div>
+    </div>
+    <button class="btn-primary" style="width:100%;margin-top:8px" onclick="submitContact()">أرسل طلبك الآن</button>
+  </div>
+</div>
+
+<script>
+/* ================================================================
+   SERVICES DATABASE
+   ================================================================ */
+const SERVICES = {
+  1:{name:"تدقيق SEO الشامل",cat:"SEO",pMin:3000,pMax:6000,dur:"3-5 أيام",guar:"قائمة إصلاحات قابلة للتنفيذ فوراً",desc:"تحليل تقني كامل لموقعك يكشف كل ما يمنعك من الظهور في الصفحة الأولى ويُسلّمك خارطة طريق أولويات واضحة."},
+  3:{name:"إعداد Google Business Profile",cat:"SEO",pMin:1500,pMax:3500,dur:"2-4 أيام",guar:"إعداد كامل + تحسين مستمر لشهر",desc:"إنشاء أو تحسين ملفك على خرائط Google — الظهور المحلي يجلب عملاء جاهزين للشراء."},
+  5:{name:"SEO المتقدم للمنافسة الشديدة",cat:"SEO",pMin:8000,pMax:18000,dur:"3-6 أسابيع",guar:"خطة تفصيلية 6 أشهر + متابعة شهرية",desc:"استراتيجية SEO متكاملة للمنافسة في القطاعات التنافسية — تقني + محتوى + روابط."},
+  6:{name:"استراتيجية المحتوى والمدونة",cat:"SEO",pMin:4000,pMax:9000,dur:"1-2 أسبوع",guar:"تقويم محتوى كامل + 3 مقالات نموذجية",desc:"خطة محتوى 6-12 شهراً مع أفكار مقالات محسّنة لـSEO تجلب الزوار العضوي تلقائياً."},
+  7:{name:"SEO التجارة الإلكترونية",cat:"SEO",pMin:5000,pMax:11000,dur:"2-3 أسابيع",guar:"تقرير مقارنة قبل وبعد خلال 90 يوم",desc:"تحسين صفحات المنتجات والتصنيفات لرفع الظهور العضوي ومبيعات المتجر."},
+  8:{name:"SEO محلي متعدد الفروع",cat:"SEO",pMin:6000,pMax:14000,dur:"2-4 أسابيع",guar:"إعداد كامل + تحسين مستمر لـ3 أشهر",desc:"تحسين الظهور المحلي لكل فرع أو منطقة جغرافية بشكل مستقل مع توحيد البيانات."},
+  9:{name:"SEO+CRO المدمج",cat:"CRO",pMin:5500,pMax:11000,dur:"2-3 أسابيع",guar:"قياس دقيق قبل وبعد + خطة إصلاح مجانية",desc:"الجمع بين تحسين الظهور في البحث وتحويل الزوار القادمين منه — ضربتان بحجر واحد."},
+  12:{name:"كتابة محتوى SEO (10 مقالات)",cat:"SEO",pMin:4500,pMax:9000,dur:"2-3 أسابيع",guar:"مراجعة مجانية بعد 90 يوم",desc:"10 مقالات متخصصة بكلمات مفتاحية عالية الأثر — محسّنة للظهور والتحويل معاً."},
+  13:{name:"استراتيجية الكلمات المفتاحية",cat:"SEO",pMin:3000,pMax:6500,dur:"3-5 أيام",guar:"مراجعة مجانية بعد 6 أشهر",desc:"بحث متعمق عن 200+ كلمة مفتاحية مقسّمة حسب نية الشراء وترتيبها بالأولوية."},
+  14:{name:"Digital PR وبناء السلطة",cat:"SEO",pMin:7000,pMax:15000,dur:"3-6 أسابيع",guar:"تقرير شهري بكل ذكر وتأثيره",desc:"نشر محتوى علامتك في مواقع موثوقة وصحف إلكترونية لبناء سلطة رقمية حقيقية."},
+  19:{name:"استراتيجية تسويق الفيديو",cat:"فيديو",pMin:5000,pMax:10000,dur:"1 أسبوع",guar:"استشارة متابعة مجانية بعد 60 يوم",desc:"خطة محتوى فيديو 6-12 شهراً مخصصة لقطاعك تشمل أنواع الفيديوهات والتوزيع."},
+  20:{name:"إنتاج فيديو تعريفي للعلامة",cat:"فيديو",pMin:6000,pMax:15000,dur:"1-2 أسبوع",guar:"مراجعة حتى 3 تعديلات مجانية",desc:"فيديو احترافي 60-90 ثانية يُعرّف علامتك ويحوّل الزوار غير المقتنعين."},
+  21:{name:"سلسلة فيديوهات تعليمية",cat:"فيديو",pMin:8000,pMax:18000,dur:"2-3 أسابيع",guar:"أفكار فيديوهات مجانية للـ3 أشهر القادمة",desc:"5 فيديوهات تعليمية تُثبت خبرتك وتبني الثقة مع جمهورك قبل الشراء."},
+  23:{name:"إنتاج Shorts / Reels",cat:"فيديو",pMin:3000,pMax:7000,dur:"1 أسبوع",guar:"إعادة إنتاج مجانية لأي فيديو أقل من 1000 مشاهدة",desc:"5-10 فيديوهات قصيرة محسّنة للخوارزميات ومُصمَّمة للانتشار."},
+  25:{name:"دراسة حالة بالفيديو",cat:"فيديو",pMin:4000,pMax:9000,dur:"1-2 أسبوع",guar:"نسخة نصية + نسخة فيديو مجاناً معاً",desc:"تحويل قصة نجاح عميل لفيديو احترافي يُعزز الثقة ويزيد CR على صفحاتك."},
+  29:{name:"Webinar إنشاء وإدارة",cat:"فيديو",pMin:4000,pMax:9000,dur:"1-2 أسبوع",guar:"تسجيل كامل + ملخص تنفيذي للحاضرين",desc:"تصميم وإدارة ندوة إلكترونية كاملة — محتوى، تسجيل، تسويق، متابعة."},
+  33:{name:"إدارة Google Shopping",cat:"إعلانات",pMin:3500,pMax:8500,dur:"مستمر",guar:"مراجعة كاملة للحملة أسبوعياً مجاناً",desc:"إدارة متخصصة لحملات Shopping لظهور منتجاتك مع الصورة والسعر في الصفحة الأولى."},
+  34:{name:"إدارة Meta Ads",cat:"إعلانات",pMin:3000,pMax:8000,dur:"مستمر",guar:"مراجعة الاستهداف مجاناً كل أسبوعين",desc:"إدارة كاملة لحملات Meta بأبحاث الجمهور والإبداع والتحسين للوصول لأفضل ROAS."},
+  36:{name:"حملات Retargeting",cat:"إعلانات",pMin:2500,pMax:6000,dur:"مستمر",guar:"نسخ إعلانية A/B مجانية شهرياً",desc:"استعادة الزوار الذين لم يُكملوا الشراء بإعلانات ذكية تظهر لهم في جميع المنصات."},
+  37:{name:"LinkedIn Ads للـB2B",cat:"إعلانات",pMin:4000,pMax:10000,dur:"مستمر",guar:"10 عملاء محتملين مؤهلين في أول شهر",desc:"استهداف صانعي القرار بدقة على LinkedIn لجلب عملاء B2B."},
+  38:{name:"تحسين Quality Score وخفض التكلفة",cat:"إعلانات",pMin:2500,pMax:5500,dur:"1 أسبوع",guar:"تقرير مقارنة CPC قبل وبعد خلال 30 يوم",desc:"رفع نقاط الجودة في Google Ads لتخفيض تكلفة النقرة 30-50% دون تقليل الظهور."},
+  41:{name:"تدقيق الحملات الإعلانية",cat:"إعلانات",pMin:2000,pMax:4500,dur:"2-3 أيام",guar:"قائمة أولويات واضحة مع التوفيرات المتوقعة",desc:"فحص شامل لحملاتك لاكتشاف الهدر — معظم الحملات تهدر 40% من ميزانيتها."},
+  43:{name:"تدقيق CRO الشامل",cat:"CRO",pMin:4000,pMax:8500,dur:"3-5 أيام",guar:"خطة تحسين قابلة للتنفيذ خلال 30 يوم",desc:"تحليل كامل لرحلة العميل في موقعك لاكتشاف أين يتسرب الزوار ولماذا لا يُكملون الشراء."},
+  44:{name:"تحسين صفحة الهبوط",cat:"CRO",pMin:3500,pMax:8000,dur:"1 أسبوع",guar:"اختبار A/B مجاني لأفضل نسختين",desc:"تحسين تصميم ومحتوى صفحة الهبوط — كل 1% زيادة في التحويل تساوي آلاف الريالات شهرياً."},
+  45:{name:"بناء صفحة هبوط من الصفر",cat:"CRO",pMin:4500,pMax:10000,dur:"1-2 أسبوع",guar:"تعديلات مجانية 30 يوم بعد الإطلاق",desc:"تصميم وبناء صفحة هبوط محسّنة للتحويل من الصفر — تصميم + محتوى + ربط + اختبار."},
+  47:{name:"اختبار A/B منهجي",cat:"CRO",pMin:3000,pMax:7000,dur:"2-4 أسابيع",guar:"تقرير نتائج مفصل + توصيات مستقبلية",desc:"تصميم وتشغيل اختبارات A/B لعناصر الصفحة الأهم بمنهجية علمية."},
+  49:{name:"تطوير عملية البيع",cat:"CRO",pMin:5000,pMax:11000,dur:"1-2 أسبوع",guar:"نصوص بيع جاهزة + خطة تدريب للفريق",desc:"مراجعة وإعادة هيكلة عملية البيع — خطوات، نصوص، معالجة الاعتراضات، متابعة."},
+  50:{name:"Heatmaps وتحليل سلوك الزوار",cat:"CRO",pMin:2500,pMax:5500,dur:"1 أسبوع",guar:"تقرير مصور كامل للنتائج",desc:"تثبيت وتحليل Heatmaps لمعرفة أين ينقر الزوار وأين يتوقفون وأين يغادرون."},
+  51:{name:"تحسين نماذج الاتصال والتسجيل",cat:"CRO",pMin:2000,pMax:4500,dur:"2-4 أيام",guar:"اختبار A/B للنموذج المحسّن مجاناً",desc:"تحسين نماذج موقعك لرفع معدل إكمالها 30-50%."},
+  52:{name:"عناصر الإثبات الاجتماعي",cat:"CRO",pMin:2500,pMax:5500,dur:"3-5 أيام",guar:"تقرير مقارنة قبل وبعد بعد 30 يوم",desc:"إضافة تقييمات وشهادات وأرقام إثبات بشكل استراتيجي في المواضع الأكثر تأثيراً."},
+  54:{name:"إعداد وتحسين CRM",cat:"CRO",pMin:4500,pMax:10000,dur:"1-2 أسبوع",guar:"تدريب الفريق + دليل استخدام مجاناً",desc:"إعداد أو تحسين CRM مع ربطه بعملية البيع لأتمتة المتابعة."},
+  55:{name:"نظام الإحالات والولاء",cat:"CRO",pMin:3500,pMax:8000,dur:"1-2 أسبوع",guar:"نظام كامل — عروض + تتبع + متابعة",desc:"تصميم وإطلاق برنامج إحالة يحوّل عملاءك الحاليين لقناة مبيعات تعمل تلقائياً."},
+  56:{name:"تدريب فريق المبيعات",cat:"CRO",pMin:5000,pMax:12000,dur:"يوم + متابعة",guar:"جلسة متابعة مجانية بعد 30 يوم",desc:"برنامج تدريبي في تقنيات الإغلاق ومعالجة الاعتراضات والتفاوض."},
+  57:{name:"بناء قائمة بريدية من الصفر",cat:"بريد",pMin:3500,pMax:7500,dur:"1-2 أسبوع",guar:"نظام كامل جاهز للعمل التلقائي",desc:"استراتيجية كاملة لبناء قائمة بريدية عالية الجودة — Lead Magnets + Landing Pages."},
+  58:{name:"تسلسل بريد الترحيب الآلي",cat:"بريد",pMin:3000,pMax:6500,dur:"1 أسبوع",guar:"إعادة كتابة مجانية إذا لم تتحقق الأهداف",desc:"سلسلة 5-7 رسائل ترحيب آلية تُعرّف العميل بعلامتك وتقوده للشراء الأول في 14 يوماً."},
+  59:{name:"استعادة السلة المتروكة",cat:"بريد",pMin:2500,pMax:5500,dur:"3-5 أيام",guar:"تحسين مجاني إذا كانت الاستعادة أقل من 8%",desc:"تسلسل آلي من 3 رسائل يُذكّر المتسوق بما تركه ويعيده للإكمال — يستعيد 10-15%."},
+  60:{name:"حملة إعادة إشراك العملاء",cat:"بريد",pMin:2000,pMax:4500,dur:"1 أسبوع",guar:"نسختان مختلفتان للاختبار مجاناً",desc:"حملة مخصصة لإعادة تفعيل العملاء الخاملين وتحويلهم مجدداً."},
+  62:{name:"أتمتة التسويق البريدي",cat:"بريد",pMin:5000,pMax:11000,dur:"1-2 أسبوع",guar:"تدريب مجاني على إدارة الأتمتة",desc:"بناء تسلسلات بريدية آلية كاملة — Onboarding, Re-engagement, Upsell, Cross-sell."},
+  66:{name:"التحقق من صحة الفكرة",cat:"استشارة",pMin:5000,pMax:10000,dur:"1-2 أسبوع",guar:"تقرير 15+ صفحة مع توصيات قابلة للتنفيذ",desc:"تحليل موضوعي للفكرة — حجم السوق، المنافسة، جدوى التنفيذ — قبل إنفاق ريال."},
+  67:{name:"شخصية المشتري المثالي",cat:"استشارة",pMin:6000,pMax:12000,dur:"1-2 أسبوع",guar:"جلسة تدريب الفريق مجانية",desc:"2-3 Buyer Personas مبنية على بحث حقيقي في السوق لتحسين استهداف التسويق."},
+  68:{name:"استشارة استراتيجية تسويقية",cat:"استشارة",pMin:3000,pMax:7000,dur:"يوم واحد",guar:"ملخص تنفيذي 10 صفحات مكتوب",desc:"جلسة مكثفة تُحدد أولويات التسويق وخطة العمل للـ90 يوم القادمة."},
+  69:{name:"تحليل المنافسين الشامل",cat:"استشارة",pMin:5000,pMax:11000,dur:"1-2 أسبوع",guar:"تقرير 25+ صفحة مع خريطة فرص واضحة",desc:"تحليل 5-10 منافسين — SEO، Ads، محتوى، تسعير — لاكتشاف فرص الفوز."},
+  70:{name:"خطة التحول الرقمي",cat:"استشارة",pMin:12000,pMax:25000,dur:"2-4 أسابيع",guar:"جلسات متابعة شهرية مجانية لـ3 أشهر",desc:"خارطة طريق 12-24 شهراً لتحويل عملياتك التقليدية لرقمية."},
+  71:{name:"ورشة عمل استراتيجية",cat:"استشارة",pMin:12000,pMax:25000,dur:"يوم كامل",guar:"جلسة متابعة مجانية بعد 60 يوم",desc:"ورشة يوم كامل لفريق القيادة لبناء استراتيجية نمو موحدة — OKRs، Blue Ocean، SWOT."},
+  72:{name:"إدارة شاملة للسوشيال ميديا",cat:"سوشيال",pMin:8000,pMax:18000,dur:"مستمر",guar:"نمو 10%+ شهرياً أو مراجعة مجانية",desc:"إدارة كاملة لـ3-5 حسابات — محتوى + نشر + ردود + تقرير شهري."},
+  75:{name:"إعلانات السوشيال المتكاملة",cat:"سوشيال",pMin:4000,pMax:10000,dur:"مستمر",guar:"تقرير أداء أسبوعي + تعديل فوري",desc:"إدارة إعلانات Meta + TikTok + Snapchat بميزانية موحدة وتوزيع ذكي للإنفاق."},
+  79:{name:"محتوى Instagram المتخصص",cat:"سوشيال",pMin:3000,pMax:7500,dur:"مستمر",guar:"20+ منشور شهرياً في المواعيد المحددة",desc:"إنتاج كامل لمحتوى Instagram — صور، Reels، Stories — بهوية بصرية موحدة."},
+  80:{name:"محتوى TikTok المتخصص",cat:"سوشيال",pMin:3000,pMax:7500,dur:"مستمر",guar:"إعادة إنتاج أي فيديو أقل من 1000 مشاهدة",desc:"إنتاج محتوى TikTok أصيل يناسب خوارزمية المنصة ويُبني جمهوراً شاباً حقيقياً."},
+  82:{name:"إدارة LinkedIn للعلامات",cat:"سوشيال",pMin:3500,pMax:8000,dur:"مستمر",guar:"محتوى متخصص لقطاعك + تقرير شهري",desc:"إدارة صفحة LinkedIn وملف صاحب الشركة لبناء سلطة مهنية وجذب شراكات B2B."},
+  88:{name:"لوحة تحكم تقارير مخصصة",cat:"تحليلات",pMin:3500,pMax:7500,dur:"3-7 أيام",guar:"تحديث اللوحة مجاناً كل 3 أشهر",desc:"بناء لوحة تحكم تجمع كل KPIs من جميع المنصات في مكان واحد."},
+  90:{name:"إعداد تتبع التحويلات الكاملة",cat:"تحليلات",pMin:3000,pMax:6500,dur:"3-5 أيام",guar:"اختبار شامل + تقرير صحة التتبع",desc:"ربط جميع منصات الإعلان بتتبع تحويلات دقيق لقرارات حقيقية."},
+  91:{name:"تحليل أداء تسويقي شهري",cat:"تحليلات",pMin:3000,pMax:6500,dur:"مستمر",guar:"جلسة تفسير التقرير مجاناً شهرياً",desc:"تقرير تحليلي شهري لكل قنواتك التسويقية مع توصيات قابلة للتنفيذ فوراً."},
+  93:{name:"تحليل ROAS وتحسين الإنفاق",cat:"تحليلات",pMin:3000,pMax:6500,dur:"3-5 أيام",guar:"تقرير توصيات للتطبيق الفوري",desc:"تحليل دقيق لعائد كل ريال تنفقه وإعادة توزيع الميزانية لأعلى عائد ممكن."},
+  94:{name:"بناء منظومة KPIs",cat:"تحليلات",pMin:4000,pMax:9000,dur:"1 أسبوع",guar:"تدريب الفريق على المنظومة مجاناً",desc:"تصميم منظومة KPIs لكل قسم تربط الأنشطة اليومية بالأهداف السنوية."},
+  95:{name:"استراتيجية التسويق بالمؤثرين",cat:"مؤثرون",pMin:5000,pMax:11000,dur:"1-2 أسبوع",guar:"معايير اختيار مؤثرين جاهزة للتطبيق",desc:"خطة شاملة للتسويق عبر المؤثرين — اختيار، تفاوض، محتوى، قياس."},
+  96:{name:"البحث عن المؤثرين المناسبين",cat:"مؤثرون",pMin:3000,pMax:7000,dur:"3-5 أيام",guar:"تحليل أصالة الجمهور لكل مؤثر",desc:"بحث وتصفية 50-100 مؤثر مناسب لقطاعك مع تقييم الجمهور الحقيقي."},
+  97:{name:"إدارة حملة مؤثرين كاملة",cat:"مؤثرون",pMin:6000,pMax:15000,dur:"2-4 أسابيع",guar:"تقرير نهائي مفصل بكل مؤشرات الأداء",desc:"تنفيذ حملة مؤثرين شاملة — اختيار، تفاوض، إيجاز، متابعة، تقرير نهائي."},
+  103:{name:"إدارة سمعة العلامة (ORM)",cat:"علامة",pMin:5000,pMax:12000,dur:"مستمر",guar:"خطة استجابة لأي أزمة خلال 2 ساعة",desc:"مراقبة ومعالجة التقييمات السلبية وبناء حضور إيجابي عبر جميع المنصات."},
+  106:{name:"تحسين متجر Shopify الكامل",cat:"تجارة إلكترونية",pMin:5000,pMax:12000,dur:"1-2 أسبوع",guar:"تقرير مقارنة قبل وبعد مفصل",desc:"تحسين شامل لمتجر Shopify — سرعة، صفحات منتجات، تحويل، SEO."},
+  107:{name:"تحسين صفحات المنتجات",cat:"تجارة إلكترونية",pMin:3500,pMax:8000,dur:"1 أسبوع",guar:"اختبار A/B مجاني لأفضل نسختين",desc:"تحسين صور، عناوين، وصف، وعناصر تحويل صفحات المنتجات لرفع معدل الإضافة للسلة."},
+  108:{name:"تحسين تجربة الدفع",cat:"تجارة إلكترونية",pMin:3000,pMax:7000,dur:"1 أسبوع",guar:"اختبار A/B مجاني للخطوة الحرجة",desc:"تحسين كل خطوة في عملية الدفع لتقليل التخلي عن الشراء في آخر لحظة."},
+  109:{name:"تحسين Amazon/Noon",cat:"تجارة إلكترونية",pMin:3500,pMax:8000,dur:"1-2 أسبوع",guar:"تحسين 10+ منتج مع تقرير مقارنة",desc:"تحسين قوائم المنتجات على Amazon/Noon — عناوين، بولت بوينتس، صور، A+ Content."},
+  110:{name:"رفع متوسط قيمة الطلب (AOV)",cat:"تجارة إلكترونية",pMin:3000,pMax:6500,dur:"1 أسبوع",guar:"3 استراتيجيات مختلفة للاختبار",desc:"تصميم وتطبيق Upsell/Cross-sell/Bundle لرفع متوسط إنفاق كل عميل."},
+  112:{name:"تجربة متجر الجوال",cat:"تجارة إلكترونية",pMin:4000,pMax:9000,dur:"1-2 أسبوع",guar:"اختبار على 5+ أجهزة وأنظمة تشغيل",desc:"تحسين تجربة التسوق عبر الجوال — 70%+ من التسوق يتم عبر الجوال."},
+  113:{name:"مساعد AI لخدمة العملاء 24/7",cat:"ذكاء اصطناعي",pMin:8000,pMax:18000,dur:"1-2 أسبوع",guar:"مساعد يعمل 24/7 مع تصعيد آلي للبشر",desc:"بناء وتدريب مساعد AI على بيانات شركتك يرد على 80%+ من الاستفسارات آلياً."},
+  114:{name:"الموظف الرقمي الذكي",cat:"ذكاء اصطناعي",pMin:10000,pMax:22000,dur:"2-3 أسابيع",guar:"نظام عمل كامل + دليل تشغيل + تدريب الفريق",desc:"نظام AI يُنجز مهاماً تشغيلية متكررة — تقارير، جدولة، تصنيف — بدون بشر."},
+  115:{name:"الذاكرة الذكية — RAG System",cat:"ذكاء اصطناعي",pMin:12000,pMax:25000,dur:"2-4 أسابيع",guar:"تحديث قاعدة المعرفة مجاناً أول 6 أشهر",desc:"نظام RAG يُحوّل وثائق شركتك لمعرفة قابلة للبحث والسؤال."},
+  116:{name:"منظومة AI المتكاملة",cat:"ذكاء اصطناعي",pMin:25000,pMax:60000,dur:"4-8 أسابيع",guar:"جلسات متابعة شهرية مجانية لـ6 أشهر",desc:"تصميم وتنفيذ منظومة AI كاملة تُحوّل التسويق والمبيعات وخدمة العملاء لنظام شبه مُؤتمَت."}
+};
+
+/* ================================================================
+   K MATRIX
+   ================================================================ */
+const KMATRIX = {
+  "startup|validation|small":    [{id:66,t:"now"},{id:13,t:"now"},{id:68,t:"+30"},{id:3,t:"+60"},{id:6,t:"+90"}],
+  "startup|validation|medium":   [{id:66,t:"now"},{id:69,t:"now"},{id:68,t:"+30"},{id:45,t:"+30"},{id:6,t:"+60"}],
+  "startup|validation|large":    [{id:66,t:"now"},{id:69,t:"now"},{id:71,t:"now"},{id:67,t:"+30"},{id:70,t:"+60"}],
+  "startup|roadmap|small":       [{id:66,t:"now"},{id:68,t:"now"},{id:45,t:"+30"},{id:6,t:"+60"},{id:3,t:"+90"}],
+  "startup|roadmap|medium":      [{id:68,t:"now"},{id:45,t:"now"},{id:34,t:"+30"},{id:6,t:"+30"},{id:57,t:"+60"}],
+  "startup|roadmap|large":       [{id:68,t:"now"},{id:71,t:"now"},{id:45,t:"now"},{id:34,t:"+30"},{id:19,t:"+60"}],
+  "startup|bizplan|small":       [{id:66,t:"now"},{id:68,t:"now"},{id:13,t:"+30"},{id:6,t:"+60"},{id:3,t:"+90"}],
+  "startup|bizplan|medium":      [{id:66,t:"now"},{id:69,t:"now"},{id:67,t:"+30"},{id:45,t:"+60"},{id:6,t:"+90"}],
+  "startup|bizplan|large":       [{id:71,t:"now"},{id:66,t:"now"},{id:69,t:"now"},{id:70,t:"+30"},{id:67,t:"+60"}],
+  "smb|awareness|small":         [{id:1,t:"now"},{id:3,t:"now"},{id:6,t:"+30"},{id:72,t:"+60"},{id:12,t:"+90"}],
+  "smb|awareness|medium":        [{id:5,t:"now"},{id:34,t:"now"},{id:72,t:"+30"},{id:6,t:"+60"},{id:12,t:"+90"}],
+  "smb|awareness|large":         [{id:5,t:"now"},{id:34,t:"now"},{id:72,t:"now"},{id:14,t:"+30"},{id:19,t:"+60"}],
+  "smb|conversion|small":        [{id:43,t:"now"},{id:44,t:"now"},{id:52,t:"+30"},{id:50,t:"+60"},{id:51,t:"+90"}],
+  "smb|conversion|medium":       [{id:43,t:"now"},{id:44,t:"now"},{id:52,t:"+30"},{id:50,t:"+60"},{id:9,t:"+90"}],
+  "smb|conversion|large":        [{id:43,t:"now"},{id:44,t:"now"},{id:47,t:"now"},{id:9,t:"+30"},{id:36,t:"+60"}],
+  "smb|retention|small":         [{id:57,t:"now"},{id:59,t:"now"},{id:60,t:"+30"},{id:55,t:"+60"},{id:52,t:"+90"}],
+  "smb|retention|medium":        [{id:57,t:"now"},{id:59,t:"now"},{id:62,t:"+30"},{id:55,t:"+60"},{id:60,t:"+90"}],
+  "smb|retention|large":         [{id:62,t:"now"},{id:59,t:"now"},{id:54,t:"+30"},{id:55,t:"+60"},{id:113,t:"+90"}],
+  "enterprise|growth|small":     [{id:5,t:"now"},{id:34,t:"now"},{id:36,t:"+30"},{id:14,t:"+60"},{id:72,t:"+90"}],
+  "enterprise|growth|medium":    [{id:5,t:"now"},{id:34,t:"now"},{id:75,t:"+30"},{id:14,t:"+60"},{id:95,t:"+90"}],
+  "enterprise|growth|large":     [{id:5,t:"now"},{id:34,t:"now"},{id:75,t:"now"},{id:14,t:"+30"},{id:97,t:"+60"}],
+  "enterprise|cac|small":        [{id:38,t:"now"},{id:41,t:"now"},{id:93,t:"+30"},{id:90,t:"+60"},{id:94,t:"+90"}],
+  "enterprise|cac|medium":       [{id:41,t:"now"},{id:93,t:"now"},{id:38,t:"+30"},{id:88,t:"+60"},{id:90,t:"+90"}],
+  "enterprise|cac|large":        [{id:93,t:"now"},{id:88,t:"now"},{id:90,t:"+30"},{id:114,t:"+60"},{id:94,t:"+90"}],
+  "enterprise|system|small":     [{id:49,t:"now"},{id:54,t:"now"},{id:91,t:"+30"},{id:94,t:"+60"},{id:56,t:"+90"}],
+  "enterprise|system|medium":    [{id:54,t:"now"},{id:49,t:"now"},{id:88,t:"+30"},{id:94,t:"+60"},{id:113,t:"+90"}],
+  "enterprise|system|large":     [{id:116,t:"now"},{id:54,t:"now"},{id:93,t:"+30"},{id:49,t:"+60"},{id:113,t:"+90"}],
+  "ecommerce|startup|small":     [{id:45,t:"now"},{id:3,t:"now"},{id:6,t:"+30"},{id:107,t:"+60"},{id:112,t:"+90"}],
+  "ecommerce|startup|medium":    [{id:45,t:"now"},{id:34,t:"now"},{id:107,t:"+30"},{id:6,t:"+60"},{id:112,t:"+90"}],
+  "ecommerce|startup|large":     [{id:45,t:"now"},{id:34,t:"now"},{id:107,t:"+30"},{id:110,t:"+60"},{id:112,t:"+90"}],
+  "ecommerce|smb|conversion":    [{id:43,t:"now"},{id:108,t:"now"},{id:107,t:"+30"},{id:110,t:"+60"},{id:112,t:"+90"}],
+  "ecommerce|smb|awareness":     [{id:7,t:"now"},{id:34,t:"now"},{id:33,t:"+30"},{id:80,t:"+60"},{id:110,t:"+90"}],
+  "ecommerce|smb|retention":     [{id:57,t:"now"},{id:59,t:"now"},{id:62,t:"+30"},{id:110,t:"+60"},{id:36,t:"+90"}],
+  "ecommerce|enterprise|large":  [{id:106,t:"now"},{id:33,t:"now"},{id:108,t:"+30"},{id:110,t:"+60"},{id:113,t:"+90"}],
+  "health|startup":              [{id:3,t:"now"},{id:66,t:"now"},{id:44,t:"+30"},{id:6,t:"+60"},{id:52,t:"+90"}],
+  "health|smb|awareness":        [{id:3,t:"now"},{id:8,t:"now"},{id:103,t:"+30"},{id:20,t:"+60"},{id:52,t:"+90"}],
+  "health|smb|conversion":       [{id:43,t:"now"},{id:52,t:"now"},{id:44,t:"+30"},{id:58,t:"+60"},{id:103,t:"+90"}],
+  "health|smb|retention":        [{id:57,t:"now"},{id:58,t:"now"},{id:55,t:"+30"},{id:103,t:"+60"},{id:52,t:"+90"}],
+  "health|enterprise":           [{id:103,t:"now"},{id:8,t:"now"},{id:75,t:"+30"},{id:20,t:"+60"},{id:113,t:"+90"}],
+  "education|startup":           [{id:66,t:"now"},{id:6,t:"now"},{id:45,t:"+30"},{id:21,t:"+60"},{id:57,t:"+90"}],
+  "education|smb|awareness":     [{id:21,t:"now"},{id:6,t:"now"},{id:57,t:"+30"},{id:34,t:"+60"},{id:29,t:"+90"}],
+  "education|smb|conversion":    [{id:44,t:"now"},{id:58,t:"now"},{id:52,t:"+30"},{id:25,t:"+60"},{id:62,t:"+90"}],
+  "education|smb|retention":     [{id:62,t:"now"},{id:58,t:"now"},{id:55,t:"+30"},{id:60,t:"+60"},{id:52,t:"+90"}],
+  "education|enterprise":        [{id:62,t:"now"},{id:29,t:"now"},{id:88,t:"+30"},{id:115,t:"+60"},{id:116,t:"+90"}],
+  "fnb|startup":                 [{id:3,t:"now"},{id:79,t:"now"},{id:6,t:"+30"},{id:44,t:"+60"},{id:52,t:"+90"}],
+  "fnb|smb|awareness":           [{id:3,t:"now"},{id:79,t:"now"},{id:80,t:"+30"},{id:23,t:"+60"},{id:96,t:"+90"}],
+  "fnb|smb|conversion":          [{id:44,t:"now"},{id:52,t:"now"},{id:103,t:"+30"},{id:57,t:"+60"},{id:36,t:"+90"}],
+  "fnb|smb|retention":           [{id:57,t:"now"},{id:59,t:"now"},{id:55,t:"+30"},{id:103,t:"+60"},{id:36,t:"+90"}],
+  "fnb|enterprise":              [{id:103,t:"now"},{id:8,t:"now"},{id:97,t:"+30"},{id:75,t:"+60"},{id:113,t:"+90"}],
+  "realestate|startup":          [{id:66,t:"now"},{id:3,t:"now"},{id:45,t:"+30"},{id:20,t:"+60"},{id:6,t:"+90"}],
+  "realestate|smb|awareness":    [{id:5,t:"now"},{id:34,t:"now"},{id:20,t:"+30"},{id:14,t:"+60"},{id:82,t:"+90"}],
+  "realestate|smb|conversion":   [{id:44,t:"now"},{id:43,t:"now"},{id:25,t:"+30"},{id:52,t:"+60"},{id:37,t:"+90"}],
+  "realestate|smb|retention":    [{id:57,t:"now"},{id:54,t:"now"},{id:55,t:"+30"},{id:103,t:"+60"},{id:37,t:"+90"}],
+  "realestate|enterprise":       [{id:14,t:"now"},{id:37,t:"now"},{id:69,t:"+30"},{id:97,t:"+60"},{id:116,t:"+90"}],
+  "b2b|startup":                 [{id:66,t:"now"},{id:68,t:"now"},{id:45,t:"+30"},{id:82,t:"+60"},{id:3,t:"+90"}],
+  "b2b|smb|awareness":           [{id:82,t:"now"},{id:5,t:"now"},{id:37,t:"+30"},{id:14,t:"+60"},{id:20,t:"+90"}],
+  "b2b|smb|conversion":          [{id:49,t:"now"},{id:44,t:"now"},{id:54,t:"+30"},{id:52,t:"+60"},{id:56,t:"+90"}],
+  "b2b|smb|retention":           [{id:57,t:"now"},{id:54,t:"now"},{id:58,t:"+30"},{id:55,t:"+60"},{id:49,t:"+90"}],
+  "b2b|enterprise|system":       [{id:116,t:"now"},{id:54,t:"now"},{id:93,t:"+30"},{id:49,t:"+60"},{id:113,t:"+90"}],
+  "b2b|enterprise|cac":          [{id:41,t:"now"},{id:37,t:"now"},{id:93,t:"+30"},{id:88,t:"+60"},{id:114,t:"+90"}],
+  "b2b|enterprise|growth":       [{id:69,t:"now"},{id:37,t:"now"},{id:14,t:"+30"},{id:97,t:"+60"},{id:115,t:"+90"}],
+  "b2b|enterprise|system|large": [{id:116,t:"now"},{id:54,t:"now"},{id:93,t:"+30"},{id:49,t:"+60"},{id:113,t:"+90"}],
+  "manufacturing|startup":       [{id:66,t:"now"},{id:68,t:"now"},{id:45,t:"+30"},{id:82,t:"+60"},{id:3,t:"+90"}],
+  "manufacturing|smb|awareness": [{id:82,t:"now"},{id:5,t:"now"},{id:37,t:"+30"},{id:14,t:"+60"},{id:20,t:"+90"}],
+  "manufacturing|smb|conversion":[{id:49,t:"now"},{id:44,t:"now"},{id:54,t:"+30"},{id:52,t:"+60"},{id:56,t:"+90"}],
+  "manufacturing|enterprise|system":[{id:116,t:"now"},{id:54,t:"now"},{id:93,t:"+30"},{id:49,t:"+60"},{id:113,t:"+90"}],
+  "manufacturing|enterprise|cac":[{id:41,t:"now"},{id:37,t:"now"},{id:93,t:"+30"},{id:88,t:"+60"},{id:114,t:"+90"}]
+};
+
+/* ================================================================
+   IMPROVEMENT COEFFICIENTS
+   ================================================================ */
+const IMPROVEMENT = {
+  "SEO":         {c:1.25,r:1.50,o:1.80,a:"V"},
+  "إعلانات":    {c:1.40,r:1.70,o:2.20,a:"V"},
+  "CRO":         {c:1.35,r:1.65,o:2.00,a:"CR"},
+  "بريد":        {c:1.15,r:1.25,o:1.40,a:"R"},
+  "سوشيال":     {c:1.30,r:1.60,o:2.00,a:"V"},
+  "ذكاء اصطناعي":{c:1.20,r:1.35,o:1.55,a:"CR"},
+  "تحليلات":    {c:1.08,r:1.15,o:1.25,a:"R"},
+  "استشارة":    {c:1.15,r:1.25,o:1.40,a:"V"},
+  "علامة":      {c:1.20,r:1.40,o:1.70,a:"V"},
+  "تجارة إلكترونية":{c:1.40,r:1.70,o:2.10,a:"CR"},
+  "فيديو":      {c:1.20,r:1.40,o:1.65,a:"V"},
+  "مؤثرون":     {c:1.35,r:1.55,o:1.85,a:"V"}
+};
+
+/* ================================================================
+   STATE
+   ================================================================ */
+const state = {
+  sector:null, type:null, challenge:null,
+  budget:null, budgetMax:null,
+  V:0, CR:1.5, AOV:0,
+  hasWebsite:true, noWebsite:false,
+  useCRDefault:false, CRForced:false,
+  mainChannel:null,   // ← الاسم الصحيح الوحيد
+  salesMode:null, VLeads:0, CRLeads:0,
+  Rcurrent:0, Rmin:0, Rmax:0,
+  selectedServices:[]
+};
+
+let currentStep = -1;
+
+/* ================================================================
+   UTILITIES
+   ================================================================ */
+function fmt(n){return Math.round(n).toLocaleString('ar-SA')}
+
+function getLabel(key,val){
+  const maps = {
+    sector:{retail:"تجزئة ومبيعات",ecommerce:"تجارة إلكترونية",b2b:"خدمات مهنية / B2B",health:"صحة وعافية",education:"تعليم وتدريب",fnb:"مطاعم وضيافة",manufacturing:"صناعة وتصنيع",realestate:"عقارات وتطوير",other:"أخرى / متنوعة"},
+    type:{startup:"فكرة جديدة / لم يُطلق بعد",smb:"نشاط قائم — أقل من 3 سنوات",enterprise:"شركة راسخة — أكثر من 3 سنوات"},
+    challenge:{validation:"التحقق من جدوى الفكرة",roadmap:"الخطوات العملية للبدء",bizplan:"خطة عمل للتمويل",awareness:"لا أحد يعرف بوجودي",conversion:"زوار بلا مبيعات",retention:"مبيعات غير مستقرة",growth:"توسيع الحصة السوقية",cac:"تقليل تكلفة اكتساب العميل",system:"بناء نظام مبيعات واضح"},
+    budget:{small:"أقل من 5,000 ريال",medium:"5,000 — 15,000 ريال",large:"أكثر من 15,000 ريال"}
+  };
+  return maps[key]?.[val] || val;
+}
+
+function timingLabel(t){return {now:"الآن","+30":"بعد 30 يوم","+60":"بعد 60 يوم","+90":"بعد 3 أشهر"}[t]||t}
+function timingClass(t){return {now:"pr-now","+30":"pr-30","+60":"pr-60","+90":"pr-90"}[t]||"pr-now"}
+
+/* ================================================================
+   K MATRIX LOOKUP — محسَّن مع fallback ذكي
+   ================================================================ */
+function getServices(){
+  const {sector,type,challenge,budget} = state;
+
+  // قائمة المفاتيح المحتملة مرتبة من الأكثر تحديداً للأقل
+  const candidateKeys = [];
+  const specialSectors = ['ecommerce','health','education','fnb','realestate','b2b','manufacturing'];
+
+  if(specialSectors.includes(sector)){
+    candidateKeys.push(
+      `${sector}|${type}|${challenge}|${budget}`,
+      `${sector}|${type}|${challenge}`,
+      `${sector}|${type}|${budget}`,
+      `${sector}|${type}`,
+      `${sector}|smb|${challenge}`,
+      `${sector}|startup`,
+      `${sector}|smb`,
+      `${sector}|enterprise`
+    );
+  }
+  // Fallback للمصفوفة العامة
+  candidateKeys.push(
+    `${type}|${challenge}|${budget}`,
+    `${type}|${challenge}|medium`,
+    `${type}|${challenge}|small`,
+    `smb|conversion|medium`
+  );
+
+  let list = null;
+  for(const key of candidateKeys){
+    if(KMATRIX[key]){list = [...KMATRIX[key]]; break;}
+  }
+  if(!list) list = [{id:43,t:"now"},{id:44,t:"now"},{id:52,t:"+30"},{id:50,t:"+60"},{id:6,t:"+90"}];
+
+  // تطبيق قاعدة has_website=false
+  const requiresWebsite = [1,2,9,10,11,15,16,17,44,46,47,50,51,53,87,88,89,90,92];
+  const websiteAlts = {44:45,50:43,9:6,47:49,51:52,90:93,87:91};
+  if(!state.hasWebsite){
+    list = list.map(item=>{
+      if(requiresWebsite.includes(item.id)){
+        return {id: websiteAlts[item.id]||item.id, t:item.t};
+      }
+      return item;
+    });
+  }
+
+  // تطبيق قاعدة الميزانية
+  if(state.budgetMax && state.budgetMax < 999999){
+    list = list.map(item=>{
+      const svc = SERVICES[item.id];
+      if(svc && svc.pMin > state.budgetMax * 1.30){
+        // البحث عن بديل أرخص في نفس الفئة
+        const alt = Object.entries(SERVICES)
+          .filter(([id,s])=> parseInt(id)!==item.id && s.cat===svc.cat && s.pMin<=state.budgetMax)
+          .sort((a,b)=>a[1].pMin-b[1].pMin)[0];
+        if(alt) return {id:parseInt(alt[0]),t:item.t};
+      }
+      return item;
+    });
+  }
+
+  // إزالة التكرار
+  const seen = new Set();
+  list = list.filter(item=>{
+    if(seen.has(item.id)) return false;
+    seen.add(item.id);
+    return true;
+  });
+
+  return list.slice(0,5);
+}
+
+/* ================================================================
+   ROI CALCULATION
+   ================================================================ */
+function calculateROI(serviceList){
+  const isB2B = ['b2b','manufacturing'].includes(state.sector);
+  let Rc = 0;
+
+  if(isB2B && state.VLeads > 0){
+    Rc = state.VLeads * (state.CRLeads/100) * state.AOV;
+  } else if(state.noWebsite){
+    Rc = state.V * state.AOV; // V هنا = عدد الطلبات
+  } else {
+    Rc = state.V * (state.CR/100) * state.AOV;
+  }
+  state.Rcurrent = Rc;
+
+  // احتساب معاملات التحسين
+  const factors = serviceList.map(item=>{
+    const svc = SERVICES[item.id];
+    if(!svc) return {c:1.08,r:1.15,o:1.25};
+    const imp = IMPROVEMENT[svc.cat]||{c:1.10,r:1.20,o:1.35};
+    return {c:imp.c, r:imp.r, o:imp.o};
+  });
+
+  // معادلة التناقص التدريجي
+  function compound(arr, col){
+    if(!arr.length) return 1;
+    let res = 1;
+    const weights = [1, 0.70, 0.50, 0.35, 0.25];
+    arr.forEach((f,i)=>{ res += (f[col]-1)*(weights[i]||0.20); });
+    return res;
+  }
+
+  let Rmin = Rc * compound(factors,'c');
+  let Rmax = Rc * compound(factors,'o');
+
+  // حدود أمان
+  if(Rc > 0){
+    if(Rmin < Rc * 1.05) Rmin = Rc * 1.05;
+    if(Rmax < Rmin * 1.2) Rmax = Rmin * 1.2;
+  } else {
+    // Startup من الصفر
+    const baseAOV = state.AOV || 300;
+    Rmin = 300 * 0.015 * baseAOV;
+    Rmax = Rmin * 2.8;
+  }
+
+  // CR لا يتجاوز 15%
+  const crNew = Math.min(state.CR * 1.65, 15);
+
+  state.Rmin = Rmin;
+  state.Rmax = Rmax;
+
+  return {
+    Rc, Rmin, Rmax, crNew,
+    pctMin: Rc>0 ? Math.round((Rmin-Rc)/Rc*100) : 100,
+    pctMax: Rc>0 ? Math.round((Rmax-Rc)/Rc*100) : 280
+  };
+}
+
+/* ================================================================
+   GAIN MESSAGES
+   ================================================================ */
+function getGainMessage(svcId, roi){
+  const {Rc, crNew} = roi;
+  const isB2B = ['b2b','manufacturing'].includes(state.sector);
+  const isStartup = state.type==='startup';
+  const crOld = state.CR;
+  const crGain = crNew - crOld;
+  const revFromCR = Math.round(state.V * (crGain/100) * state.AOV);
+
+  const msgs = {
+    43:"رسم كامل لأين يتسرب زوارك — هذه المعلومة تساوي أضعاف تكلفتها قبل أي خطوة أخرى.",
+    44: revFromCR>0 ? `رفع CR من ${crOld}% إلى ~${crNew.toFixed(1)}% يُضيف ${fmt(revFromCR)} ريال/شهر.` : "صفحة محسّنة تحوّل الزوار لعملاء منذ اليوم الأول.",
+    45:isStartup?"منفذ بيعك الرسمي — كل زائر أمامه طريق واضح وسريع للشراء.":"CR مستهدف 3%+ من اليوم الأول — أعلى من معدل معظم المواقع المشابهة.",
+    52:"رفع CR إضافي 15-25% فقط بإضافة تقييمات حقيقية في المواضع الصحيحة — دون تغيير التصميم.",
+    50:"صور حرارية تُظهر بالدقة أين يتوقف زوارك — بيانات حقيقية لا تخمين.",
+    9:"ضربتان بحجر واحد: زوار أكثر من SEO + تحويل أعلى — أثر مضاعف لا تحققه خدمة واحدة.",
+    1:"خريطة طريق SEO واضحة تُوجّه كل جهودك القادمة وتكشف ما يمنعك من الصفحة الأولى.",
+    3:"ظهور في الخريطة يجلب عملاء محليين جاهزين للشراء بدون ريال إعلاني.",
+    6:"محتوى يعمل لك 24/7 بدون تكلفة متكررة — الأثر يتراكم ويزداد مع الوقت.",
+    5:"تقدّم على المنافسين في الصفحة الأولى لكلمات يبحثها عملاؤك يومياً.",
+    14:"ذكر في 5-10 مواقع موثوقة يبني سلطة تُغني عن إعلانات مدفوعة لسنوات.",
+    34:"جلب عملاء مستهدفين بدقة خلال 48 ساعة من إطلاق الحملة.",
+    72:"نمو متابعين 15-25% شهرياً وجمهور يثق بعلامتك ويشتري منها.",
+    36:"استرداد 20-35% من الزوار الذين غادروا بلا شراء — دخل كان يضيع.",
+    66:isStartup?"توفير آلاف الريالات من قرار خاطئ — تقرير Go/No-Go بأدلة رقمية قبل أي إنفاق.":"تأكيد الاتجاه الصحيح بأدلة سوقية حقيقية لا توقعات.",
+68:"خطة عمل 90 يوم مكتوبة تُوجّه كل قرار تسويقي تتخذه من الآن.",
+    69:"20+ فرصة تنافسية لم تكن تعلمها — اكسبها قبل أن يسبقك منافسوك.",
+    70:"خارطة طريق 12-24 شهراً تحوّل عملياتك التقليدية لرقمية وتوفّر 30-50% من التكاليف.",
+    71:"استراتيجية موحدة لفريق القيادة — توفير 100+ ساعة/شهر من الاجتماعات غير المنتجة.",
+    57:"قائمة بريدية = قناة مبيعات تملكها أنت، لا تستأجرها من منصة.",
+    58:"5-7 رسائل آلية تُحوّل المشترك الجديد لعميل في 14 يوماً بدون تدخل يدوي.",
+    59:"استعادة 10-15% من الزبائن الذين كادوا يشترون — دخل كان يضيع يومياً.",
+    60:"إعادة تفعيل 15-25% من العملاء الخاملين — أرخص من استقطاب عميل جديد.",
+    62:"نظام بيع آلي يعمل بدونك ويُدرّ دخلاً حتى وأنت نائم.",
+    54:"CRM يعني صفر استفسار يضيع وصفر فرصة تسقط بين الكراسي.",
+    55:"تحويل عملاءك الحاليين لفريق مبيعات مجاني يعمل بدافعية حقيقية.",
+    49: isB2B
+      ? `رفع معدل إغلاق العروض من ${state.CRLeads}% إلى أعلى — كل نقطة تحسين تساوي صفقة إضافية.`
+      : "رفع معدل إغلاق المبيعات 25-40% دون زيادة ميزانية الإعلانات.",
+    56:"فريق يُغلق أكثر بـ20-40% بعد تدريب يوم واحد — الأثر فوري وقابل للقياس.",
+    116:"خفض التكاليف التشغيلية 30-50% مع رفع الكفاءة 60-100% — قفزة لا رجعة منها.",
+    113:"رد فوري على كل استفسار 24/7 + توفير 3,000-8,000 ريال/شهر من تكاليف خدمة العملاء.",
+    114:"توفير 20-40 ساعة عمل أسبوعياً من مهام تشغيلية متكررة — وقت يُعاد توجيهه للنمو.",
+    115:"الإجابة الفورية على 95%+ من الأسئلة التقنية دون الحاجة لموظف متخصص.",
+    93:"رفع ROAS الإجمالي 30-50% بإعادة توزيع نفس الميزانية — لا زيادة في الإنفاق.",
+    88:"كل KPI أمامك في لوحة واحدة — توفير 5+ ساعات أسبوعياً في جمع التقارير.",
+    91:"قرارات أسرع وأذكى مبنية على بيانات حقيقية لا توقعات.",
+    90:"دقة 95%+ في تتبع مصدر كل تحويل — تعرف بالضبط ما الذي يعمل.",
+    94:"منظومة KPIs تربط الأنشطة اليومية بالأهداف السنوية — الجميع يعرف ماذا يقيس.",
+    82:"سلطة مهنية على LinkedIn تفتح أبواب شراكات وعملاء B2B لا يمكن الوصول إليهم بالإعلانات.",
+    37:"الوصول المباشر لصانعي القرار — لا للجمهور العام.",
+    75:"ROAS إجمالي 4x+ بتوزيع ذكي لميزانية واحدة على ثلاث منصات.",
+    103:"رفع متوسط التقييم نجمة واحدة يغيّر قرارات آلاف العملاء المحتملين.",
+    79:"محتوى يومي يُبقي علامتك في قلب جمهورك ويحوّل المتابع لعميل.",
+    80:"TikTok = أسرع طريق لجمهور شاب في السوق السعودي بتكلفة أقل من الإعلانات التقليدية.",
+    96:"قائمة 20-30 مؤثر مُصفّاة بجمهور حقيقي — توفير أسابيع من البحث اليدوي.",
+    97:"500,000+ وصول حقيقي للحملة مع تقرير ROI مفصّل لكل مؤثر.",
+    95:"3x+ عائد على كل ريال تنفقه على المؤثرين بخطة منهجية لا عشوائية.",
+    107:"رفع Add-to-Cart Rate بـ25-45% — أغلب المنتجات تخسر المبيعات قبل السلة.",
+    108:"تقليل Cart Abandonment 20-35% — الزائر كاد يشتري، نُعيده للإكمال.",
+    110:"رفع AOV 15-30% — كل عميل يُنفق أكثر بنفس جهد الاستقطاب.",
+    112:"رفع CR الجوال 40-70% — 70%+ من زوارك يتصفحون الجوال الآن.",
+    106:"تحسين شامل يرفع CR بـ40%+ ويُحسّن سرعة التحميل والظهور في البحث في آن واحد.",
+    109:"ظهور أعلى داخل محرك البحث الداخلي لـAmazon/Noon — حيث يبحث عملاؤك بنية الشراء.",
+    20:"فيديو 90 ثانية يُحوّل الزائر المتردد ويبني ثقة أسرع من أي نص مهما كان محكوماً.",
+    21:"خبرة تُثبتها بالفيديو = ثقة تُنتجها قبل أي اتصال مبيعاتي.",
+    23:"فيديوهات قصيرة تصل لجمهور لم يكن يعرفك — الخوارزمية تُوزّعها مجاناً.",
+    25:"قصة عميل ناجح بالفيديو تُقنع العميل المتردد أكثر من أي ضمان مكتوب.",
+    29:"ندوة إلكترونية واحدة تجمع 100+ عميل محتمل مؤهّل في مكان واحد.",
+    19:"خطة فيديو 12 شهراً تضمن تدفقاً مستمراً للمحتوى بدون ارتجال.",
+    67:"Buyer Personas حقيقية تُحسّن دقة استهداف كل رسالة تسويقية بـ80-120%.",
+    7:"ظهور صفحات المنتجات في الصفحة الأولى = مبيعات عضوية بدون عمولة لأحد.",
+    33:"منتجاتك مع الصورة والسعر في الصفحة الأولى — اللحظة التي يقرر فيها العميل الشراء.",
+    38:"خفض CPC بـ30%+ مع نفس الظهور — نفس الميزانية تجلب نقرات أكثر.",
+    41:"اكتشاف الهدر في حملاتك قبل أن يستنزف ميزانيتك أكثر.",
+    8:"ظهور محلي مثالي لكل فرع بشكل مستقل — العملاء يجدون أقرب فرع لهم فوراً.",
+    12:"10 مقالات تُرتَّب في Google وتجلب زواراً مستهدفين كل شهر بتكلفة صفر.",
+    13:"200+ كلمة مفتاحية مُصنّفة حسب نية الشراء — توجيه كل محتوى قادم بدقة.",
+    47:"تحسين CR بـ20-40% مبني على بيانات حقيقية لا تخمين.",
+    115:"وثائق شركتك تُجيب على أسئلة العملاء فورياً — معرفة لا تُنسى ولا تتعب."
+  };
+  return msgs[svcId] || "تحسين مباشر في أداء عملك مبني على بياناتك الفعلية.";
+}
+
+/* ================================================================
+   SCREEN MANAGEMENT
+   ================================================================ */
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function updateProgress(){
+  const step = typeof currentStep === 'number' ? currentStep : 0;
+  const displayStep = step === 2.5 ? 3 : Math.ceil(step);
+  const pct = step < 0 ? 0 : Math.round((Math.min(displayStep,5)/5)*100);
+  document.getElementById('prog-fill').style.width = pct+'%';
+  document.getElementById('prog-label').textContent = `خطوة ${Math.max(0,displayStep)} من 5`;
+  document.getElementById('progress-wrap').classList.toggle('visible', step >= 0);
+}
+
+function enableNext(yes){
+  document.getElementById('btn-next').classList.toggle('enabled', yes);
+}
+
+/* ================================================================
+   STEP RENDERING
+   ================================================================ */
+function renderStep(){
+  const c = document.getElementById('step-container');
+  c.innerHTML = '';
+  const wrap = document.createElement('div');
+  wrap.className = 'fade-in';
+
+  if     (currentStep === 0)   wrap.innerHTML = renderSectorStep();
+  else if(currentStep === 1)   wrap.innerHTML = renderTypeStep();
+  else if(currentStep === 2)   wrap.innerHTML = renderChallengeStep();
+  else if(currentStep === 2.5) wrap.innerHTML = renderB2BStep();
+  else if(currentStep === 3)   wrap.innerHTML = renderBudgetStep();
+  else if(currentStep === 4)   wrap.innerHTML = renderDataStep();
+
+  c.appendChild(wrap);
+  restoreSelections();
+  enableNext(false);
+  checkStepComplete();
+
+  // إخفاء زر الرجوع في الخطوة الأولى
+  document.getElementById('btn-back').style.visibility = currentStep === 0 ? 'hidden' : 'visible';
+  // تغيير نص الزر في الخطوة الأخيرة
+  document.getElementById('btn-next').textContent = currentStep === 4 ? 'احسب خطتي الآن ←' : 'التالي ←';
+}
+
+/* ---- الخطوة 0: القطاع ---- */
+function renderSectorStep(){
+  const sectors = [
+    {v:'retail',    icon:'🏪', label:'تجزئة ومبيعات',     sub:'متجر / سوبرماركت'},
+    {v:'ecommerce', icon:'🛒', label:'تجارة إلكترونية',    sub:'متجر أونلاين'},
+    {v:'b2b',       icon:'🤝', label:'خدمات مهنية / B2B', sub:'شركة لشركات'},
+    {v:'health',    icon:'🏥', label:'صحة وعافية',         sub:'عيادة / مركز'},
+    {v:'education', icon:'🎓', label:'تعليم وتدريب',       sub:'مدرسة / معهد'},
+    {v:'fnb',       icon:'🍽', label:'مطاعم وضيافة',       sub:'مطعم / كافيه'},
+    {v:'manufacturing',icon:'🏭',label:'صناعة وتصنيع',    sub:'مصنع / توريدات'},
+    {v:'realestate',icon:'🏗', label:'عقارات وتطوير',      sub:'تطوير / وساطة'},
+    {v:'other',     icon:'💼', label:'أخرى / متنوعة',     sub:'قطاع مختلف'}
+  ];
+  return `
+    <div class="step-header">
+      <h2>في أي مجال يعمل نشاطك؟</h2>
+      <p>يُساعدنا هذا على تخصيص التوصيات لقطاعك بدقة أعلى</p>
+    </div>
+    <div class="choices-grid">
+      ${sectors.map(s=>`
+        <div class="choice-card" data-step="sector" data-val="${s.v}"
+             onclick="selectChoice(this,'sector','${s.v}')">
+          <div class="choice-icon">${s.icon}</div>
+          <div class="choice-label">${s.label}</div>
+          <div class="choice-sub">${s.sub}</div>
+        </div>`).join('')}
+    </div>`;
+}
+
+/* ---- الخطوة 1: نوع العمل ---- */
+function renderTypeStep(){
+  const types = [
+    {v:'startup',   icon:'🚀', label:'فكرة جديدة',          sub:'لم أطلق بعد'},
+    {v:'smb',       icon:'🌱', label:'نشاط قائم',            sub:'أقل من 3 سنوات'},
+    {v:'enterprise',icon:'🏢', label:'شركة راسخة',           sub:'أكثر من 3 سنوات'}
+  ];
+  return `
+    <div class="step-header">
+      <h2>ما نوع عملك الحالي؟</h2>
+      <p>اختر الخيار الأقرب لوضعك الآن</p>
+    </div>
+    <div class="choices-grid cols-2" style="max-width:560px;margin:0 auto 28px">
+      ${types.map(s=>`
+        <div class="choice-card" data-step="type" data-val="${s.v}"
+             onclick="selectChoice(this,'type','${s.v}')">
+          <div class="choice-icon">${s.icon}</div>
+          <div class="choice-label">${s.label}</div>
+          <div class="choice-sub">${s.sub}</div>
+        </div>`).join('')}
+    </div>`;
+}
+
+/* ---- الخطوة 2: التحدي (ديناميكية) ---- */
+function renderChallengeStep(){
+  const t = state.type;
+  let heading, hint, opts;
+
+  if(t === 'startup'){
+    heading = 'ما أكبر عائق أمامك الآن؟';
+    hint    = 'اختر التحدي الذي يشغل تفكيرك أكثر';
+    opts = [
+      {v:'validation',icon:'🔍', label:'لا أعرف إن كانت فكرتي مجدية أصلاً'},
+      {v:'roadmap',   icon:'🗺', label:'لا أعرف الخطوات العملية للبدء'},
+      {v:'bizplan',   icon:'📋', label:'أحتاج خطة عمل للتمويل أو التنفيذ'}
+    ];
+  } else if(t === 'smb'){
+    heading = 'ما أكبر تحدٍ تواجهه الآن؟';
+    hint    = 'اختر الوصف الأدق لوضعك الحالي';
+    opts = [
+      {v:'awareness', icon:'👁', label:'لا أحد يعرف بوجودي',             sub:'مشكلة ظهور ووعي'},
+      {v:'conversion',icon:'🎯', label:'زوار يدخلون لكن لا مبيعات',      sub:'مشكلة تحويل'},
+      {v:'retention', icon:'🔄', label:'مبيعات غير مستقرة صعوداً وهبوطاً', sub:'مشكلة استمرارية'}
+    ];
+  } else {
+    heading = 'ما أولويتك الأهم هذا العام؟';
+    hint    = 'اختر الهدف الذي تريد التركيز عليه';
+    opts = [
+      {v:'growth',icon:'📈', label:'توسيع الحصة السوقية',          sub:'الوصول لجمهور أكبر'},
+      {v:'cac',   icon:'💰', label:'تقليل تكلفة اكتساب العميل',    sub:'المزيد بنفس الميزانية'},
+      {v:'system',icon:'⚙️', label:'بناء نظام مبيعات واضح',        sub:'قابل للقياس والتكرار'}
+    ];
+  }
+
+  return `
+    <div class="step-header">
+      <h2>${heading}</h2>
+      <p>${hint}</p>
+    </div>
+    <div class="choices-grid cols-1" style="max-width:520px;margin:0 auto 28px">
+      ${opts.map(o=>`
+        <div class="choice-card" style="text-align:right;display:flex;align-items:center;gap:16px;padding:18px 20px"
+             data-step="challenge" data-val="${o.v}"
+             onclick="selectChoice(this,'challenge','${o.v}')">
+          <div class="choice-icon" style="margin:0;font-size:1.5rem">${o.icon}</div>
+          <div>
+            <div class="choice-label">${o.label}</div>
+            ${o.sub ? `<div class="choice-sub">${o.sub}</div>` : ''}
+          </div>
+        </div>`).join('')}
+    </div>`;
+}
+
+/* ---- الخطوة 2.5: تفاصيل B2B / Manufacturing ---- */
+function renderB2BStep(){
+  return `
+    <div class="step-header">
+      <h2>كيف تقيس نجاح مبيعاتك؟</h2>
+      <p>اختر الوصف الأدق لكيف يتم البيع في عملك حالياً</p>
+    </div>
+    <div class="choices-grid cols-1" style="max-width:520px;margin:0 auto 20px">
+      <div class="choice-card" style="text-align:right;padding:16px 20px"
+           data-step="salesMode" data-val="rfq"
+           onclick="selectChoiceB2B(this,'rfq')">
+        <div class="choice-label">عروض أسعار نُرسلها لعملاء محتملين</div>
+      </div>
+      <div class="choice-card" style="text-align:right;padding:16px 20px"
+           data-step="salesMode" data-val="contract"
+           onclick="selectChoiceB2B(this,'contract')">
+        <div class="choice-label">عقود سنوية أو طويلة الأجل</div>
+      </div>
+      <div class="choice-card" style="text-align:right;padding:16px 20px"
+           data-step="salesMode" data-val="salesteam"
+           onclick="selectChoiceB2B(this,'salesteam')">
+        <div class="choice-label">مبيعات مباشرة عبر فريق المبيعات</div>
+      </div>
+    </div>
+    <div class="inputs-grid" id="b2b-fields" style="display:none">
+      <div class="input-group">
+        <label>عدد الاستفسارات / عروض الأسعار شهرياً</label>
+        <div class="help">تقريباً</div>
+        <input type="number" id="inp-vleads" placeholder="مثال: 20" min="0" oninput="checkStepComplete()">
+      </div>
+      <div class="input-group">
+        <label>كم منها تتحول لعقد أو صفقة فعلية؟ (%)</label>
+        <div class="help">اكتب الرقم كنسبة مئوية، مثال: 20</div>
+        <input type="number" id="inp-crleads" placeholder="مثال: 20" min="0" max="100" oninput="checkStepComplete()">
+      </div>
+      <div class="input-group">
+        <label>متوسط قيمة العقد أو الصفقة الواحدة (ريال)</label>
+        <input type="number" id="inp-aov-b2b" placeholder="مثال: 80000" min="1" oninput="checkStepComplete()">
+      </div>
+    </div>`;
+}
+
+/* ---- الخطوة 3: الميزانية ---- */
+function renderBudgetStep(){
+  const opts = [
+    {v:'small', max:5000,   icon:'💡', label:'أقل من 5,000 ريال',     sub:'ابدأ بالأساسيات'},
+    {v:'medium',max:15000,  icon:'📊', label:'5,000 — 15,000 ريال',  sub:'نمو متوازن'},
+    {v:'large', max:999999, icon:'🚀', label:'أكثر من 15,000 ريال',   sub:'نمو مكثف'}
+  ];
+  return `
+    <div class="step-header">
+      <h2>ما ميزانيتك الشهرية للتسويق؟</h2>
+      <p>نقترح فقط ما يناسب نطاقك الفعلي — لا خدمات خارج إمكانياتك الآن</p>
+    </div>
+    <div class="choices-grid cols-1" style="max-width:480px;margin:0 auto 28px">
+      ${opts.map(o=>`
+        <div class="choice-card" style="display:flex;align-items:center;gap:16px;padding:20px 24px;text-align:right"
+             data-step="budget" data-val="${o.v}"
+             onclick="selectBudget(this,'${o.v}',${o.max})">
+          <div class="choice-icon" style="margin:0;font-size:1.6rem">${o.icon}</div>
+          <div>
+            <div class="choice-label">${o.label}</div>
+            <div class="choice-sub">${o.sub}</div>
+          </div>
+        </div>`).join('')}
+    </div>`;
+}
+
+/* ---- الخطوة 4: بيانات الحجم ---- */
+function renderDataStep(){
+  const isB2B = ['b2b','manufacturing'].includes(state.sector);
+
+  // للقطاع الصناعي: بيانات موجودة من الخطوة 2.5 — نعرض ملخصاً للتأكيد
+  if(isB2B){
+    return `
+      <div class="step-header">
+        <h2>تأكيد بياناتك</h2>
+        <p>راجع الأرقام وعدّل إن لزم</p>
+      </div>
+      <div class="inputs-grid">
+        <div class="input-group">
+          <label>عدد الاستفسارات / عروض الأسعار شهرياً</label>
+          <input type="number" id="inp-vleads2" value="${state.VLeads||''}" min="0" oninput="checkStepComplete()">
+        </div>
+        <div class="input-group">
+          <label>نسبة التحويل لعقد (%)</label>
+          <input type="number" id="inp-crleads2" value="${state.CRLeads||''}" min="0" max="100" oninput="checkStepComplete()">
+        </div>
+        <div class="input-group">
+          <label>متوسط قيمة العقد (ريال)</label>
+          <input type="number" id="inp-aov2" value="${state.AOV||''}" min="1" oninput="checkStepComplete()">
+        </div>
+      </div>`;
+  }
+
+  // القطاعات العادية
+  return `
+    <div class="step-header">
+      <h2>بيانات سريعة عن نشاطك الحالي</h2>
+      <p>كلما كانت أرقامك أدق، كانت توصيتنا أكثر دقة. التقدير يكفي.</p>
+    </div>
+    <div class="inputs-grid">
+
+      <div class="input-group" id="visitors-group">
+        <label>عدد الزوار الشهريين لموقعك</label>
+        <div class="help">تقديراً تقريبياً</div>
+        <input type="number" id="inp-v" placeholder="مثال: 2,000" min="0"
+               oninput="state.V=parseFloat(this.value)||0; checkStepComplete()">
+        <button class="link-btn" onclick="activateNoWebsite()">لا يوجد موقع؟ اضغط هنا</button>
+      </div>
+
+      <div class="input-group" id="cr-group">
+        <label>نسبة الزوار الذين يشترون — معدل التحويل CR (%)</label>
+        <div class="help">مثال: اكتب 1 لو كل 1 من كل 100 زائر يشتري</div>
+        <input type="number" id="inp-cr" placeholder="مثال: 1.5" step="0.1" min="0" max="100"
+               oninput="onCRChange(this.value)">
+        <button class="link-btn" onclick="useDefaultCR()">لا أعرف هذا الرقم</button>
+        <div class="error-msg" id="cr-warn"></div>
+      </div>
+
+      <div class="input-group">
+        <label>متوسط قيمة الطلب أو الخدمة الواحدة (ريال)</label>
+        <div class="help">مثال: 300 ريال أو 2,000 ريال</div>
+        <input type="number" id="inp-aov" placeholder="مثال: 500" min="1"
+               oninput="state.AOV=parseFloat(this.value)||0; checkStepComplete()">
+      </div>
+
+      <div class="input-group">
+        <label>هل لديك موقع إلكتروني فعّال؟</label>
+        <div class="toggle-group">
+          <button class="toggle-btn active" id="tw-yes" onclick="setWebsite(true)">نعم</button>
+          <button class="toggle-btn"        id="tw-no"  onclick="setWebsite(false)">لا — أنشط على السوشيال فقط</button>
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label>ما القناة الرئيسية التي تأتي منها معظم مبيعاتك؟</label>
+        <div class="choices-grid cols-5" style="gap:8px;margin-top:10px">
+          ${[
+            {v:'website', icon:'🌐', label:'الموقع'},
+            {v:'social',  icon:'📱', label:'السوشيال'},
+            {v:'ads',     icon:'📣', label:'الإعلانات'},
+            {v:'referral',icon:'💬', label:'التوصيات'},
+            {v:'none',    icon:'🔜', label:'لا بعد'}
+          ].map(ch=>`
+            <div class="choice-card" style="padding:10px 6px"
+                 data-step="channel" data-val="${ch.v}"
+                 onclick="selectChoice(this,'mainChannel','${ch.v}')">
+              <div class="choice-icon" style="font-size:1.2rem">${ch.icon}</div>
+              <div class="choice-label" style="font-size:.75rem">${ch.label}</div>
+            </div>`).join('')}
+        </div>
+      </div>
+
+    </div>`;
+}
+
+/* ================================================================
+   INTERACTION HANDLERS
+   ================================================================ */
+function selectChoice(el, stateKey, val){
+  // إلغاء تحديد الأخوات في نفس الشبكة
+  const grid = el.closest('.choices-grid') || el.closest('[id="choices"]');
+  if(grid) grid.querySelectorAll('.choice-card').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  state[stateKey] = val;
+  checkStepComplete();
+}
+
+function selectChoiceB2B(el, val){
+  document.querySelectorAll('[data-step="salesMode"]').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  state.salesMode = val;
+  document.getElementById('b2b-fields').style.display = 'grid';
+  checkStepComplete();
+}
+
+function selectBudget(el, val, max){
+  document.querySelectorAll('[data-step="budget"]').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  state.budget    = val;
+  state.budgetMax = max;
+  checkStepComplete();
+}
+
+function activateNoWebsite(){
+  state.noWebsite  = true;
+  state.hasWebsite = false;
+  state.V          = 0;
+  const g = document.getElementById('visitors-group');
+  if(g) g.innerHTML = `
+    <label>كم طلباً أو عملية بيع تُنجزها شهرياً تقريباً؟</label>
+    <input type="number" id="inp-vorders" placeholder="مثال: 50" min="0"
+           style="width:100%;padding:12px 16px;border:1.5px solid var(--border);border-radius:8px;font-size:1rem;font-family:inherit;background:var(--bg);color:var(--text)"
+           oninput="state.V=parseFloat(this.value)||0; checkStepComplete()">`;
+  checkStepComplete();
+}
+
+function onCRChange(val){
+  const v = parseFloat(val)||0;
+  state.CR            = v;
+  state.useCRDefault  = false;
+  state.CRForced      = false;
+  const warn = document.getElementById('cr-warn');
+  if(!warn) return;
+  if(v > 20){
+    warn.textContent = `يبدو أن النسبة مرتفعة — هل تقصد أن من كل 100 زائر يُكمل ${v}% شراءً فعلياً؟`;
+    warn.classList.add('visible');
+  } else {
+    warn.classList.remove('visible');
+  }
+  // CR=0 مع وجود زوار → نُجبر 0.5%
+  if(v === 0 && state.V > 0){
+    state.CR       = 0.5;
+    state.CRForced = true;
+  }
+  checkStepComplete();
+}
+
+function useDefaultCR(){
+  state.CR           = 1.5;
+  state.useCRDefault = true;
+  const inp = document.getElementById('inp-cr');
+  if(inp){ inp.value='1.5'; inp.disabled=true; }
+  checkStepComplete();
+}
+
+function setWebsite(val){
+  state.hasWebsite = val;
+  document.getElementById('tw-yes').classList.toggle('active',  val);
+  document.getElementById('tw-no') .classList.toggle('active', !val);
+}
+
+function restoreSelections(){
+  const map = {sector:'sector',type:'type',challenge:'challenge',budget:'budget',salesMode:'salesMode',mainChannel:'channel'};
+  Object.entries(map).forEach(([stateKey, dataStep])=>{
+    const val = state[stateKey];
+    if(val) document.querySelectorAll(`[data-step="${dataStep}"][data-val="${val}"]`)
+                    .forEach(el=>el.classList.add('selected'));
+  });
+}
+
+function checkStepComplete(){
+  let ok = false;
+
+  if(currentStep === 0) ok = !!state.sector;
+  else if(currentStep === 1) ok = !!state.type;
+  else if(currentStep === 2) ok = !!state.challenge;
+  else if(currentStep === 2.5){
+    const vl  = parseFloat(document.getElementById('inp-vleads')?.value)  || 0;
+    const crl = parseFloat(document.getElementById('inp-crleads')?.value) || 0;
+    const aov = parseFloat(document.getElementById('inp-aov-b2b')?.value) || 0;
+    ok = !!state.salesMode && vl>0 && crl>0 && aov>0;
+    if(ok){ state.VLeads=vl; state.CRLeads=crl; state.AOV=aov; }
+  }
+  else if(currentStep === 3) ok = !!state.budget;
+  else if(currentStep === 4){
+    const isB2B = ['b2b','manufacturing'].includes(state.sector);
+    if(isB2B){
+      const vl  = parseFloat(document.getElementById('inp-vleads2')?.value)  || state.VLeads;
+      const crl = parseFloat(document.getElementById('inp-crleads2')?.value) || state.CRLeads;
+      const aov = parseFloat(document.getElementById('inp-aov2')?.value)     || state.AOV;
+      ok = vl>0 && crl>0 && aov>0;
+      if(ok){ state.VLeads=vl; state.CRLeads=crl; state.AOV=aov; }
+    } else {
+      const aov = parseFloat(document.getElementById('inp-aov')?.value) || 0;
+      const ch  = state.mainChannel;
+      if(!state.useCRDefault && !state.CRForced){
+        state.CR = parseFloat(document.getElementById('inp-cr')?.value) || 1.5;
+      }
+      ok = aov > 0 && !!ch;
+    }
+  }
+
+  enableNext(ok);
+}
+
+/* ================================================================
+   NAVIGATION
+   ================================================================ */
+function startDiagnostic(){
+  currentStep = 0;
+  showScreen('steps-screen');
+  updateProgress();
+  renderStep();
+}
+
+function goNext(){
+  // جمع البيانات من الخطوة الحالية قبل الانتقال
+  if(currentStep === 4){ runDiagnostic(); return; }
+
+  let next;
+  if(currentStep === 2){
+    const needsB2B = ['b2b','manufacturing'].includes(state.sector);
+    next = needsB2B ? 2.5 : 3;
+  } else if(currentStep === 2.5){
+    next = 3;
+  } else {
+    next = currentStep + 1;
+  }
+
+  currentStep = next;
+  updateProgress();
+  renderStep();
+}
+
+function goBack(){
+  let prev;
+  if(currentStep === 3){
+    const wasB2B = ['b2b','manufacturing'].includes(state.sector);
+    prev = wasB2B ? 2.5 : 2;
+  } else if(currentStep === 2.5){
+    prev = 2;
+  } else {
+    prev = Math.max(0, currentStep - 1);
+  }
+  currentStep = prev;
+  updateProgress();
+  renderStep();
+}
+
+/* ================================================================
+   LOADING & DIAGNOSIS
+   ================================================================ */
+function runDiagnostic(){
+  showScreen('loading-screen');
+  document.getElementById('progress-wrap').classList.remove('visible');
+
+  const msgs = [
+    'نراجع بياناتك...',
+    'نقارن بالسوق السعودي...',
+    'نرتب أولوياتك...',
+    'نحسب العائد المتوقع...',
+    'نُعدّ خطتك...'
+  ];
+  let idx = 0;
+  const lbl = document.getElementById('loading-text');
+  const iv  = setInterval(()=>{
+    lbl.style.opacity = 0;
+    setTimeout(()=>{ lbl.textContent = msgs[++idx % msgs.length]; lbl.style.opacity = 1; }, 200);
+  }, 700);
+
+  setTimeout(()=>{
+    clearInterval(iv);
+    const services = getServices();
+    state.selectedServices = services;
+    const roi = calculateROI(services);
+    renderResults(services, roi);
+    showScreen('results-screen');
+  }, 2600);
+}
+
+/* ================================================================
+   RESULTS RENDERING
+   ================================================================ */
+function renderResults(services, roi){
+  const {Rc, Rmin, Rmax, pctMin, pctMax} = roi;
+  const isStartup = state.type === 'startup' && Rc === 0;
+  const isB2B     = ['b2b','manufacturing'].includes(state.sector);
+
+  /* ---- ملخص الوضع ---- */
+  const missedPct = state.CR > 0 ? Math.round(100 - state.CR) : 99;
+  const insightLine = isStartup
+    ? 'مشاريع مشابهة في قطاعك تبدأ بـ1,000-3,000 ريال/شهر في أول 6 أشهر.'
+    : isB2B
+    ? `${100 - state.CRLeads}% من الاستفسارات تُغلق دون صفقة — كل نقطة تحسين تساوي عقوداً إضافية.`
+    : `تُفقد ${missedPct} من كل 100 زائر يدخل موقعك دون شراء.`;
+
+  let alertHtml = '';
+  if(state.useCRDefault)
+    alertHtml = `<div class="summary-alert"><p>تنبيه: استُخدم معدل تحويل 1.5% كقيمة افتراضية — أدخل رقمك الفعلي لنتائج أدق. <a onclick="editAnswer(4)">عدّل الرقم</a></p></div>`;
+  if(state.CRForced)
+    alertHtml = `<div class="summary-alert"><p>تنبيه: عملك لم يُحقق مبيعات بعد — الأرقام مبنية على معدل بداية تقديري 0.5%.</p></div>`;
+
+  /* ---- بطاقات الخدمات ---- */
+  const cards = services.map((item, idx)=>{
+    const svc  = SERVICES[item.id];
+    if(!svc) return '';
+    const gain = getGainMessage(item.id, roi);
+
+    return `
+      <div class="service-card">
+        <div class="sc-header">
+          <span class="sc-priority ${timingClass(item.t)}">${timingLabel(item.t)}</span>
+          <div class="sc-num">${idx+1}</div>
+          <div class="sc-title">
+            <h3>${svc.name}</h3>
+            <span class="sc-cat">${svc.cat}</span>
+          </div>
+        </div>
+        <div class="sc-body">
+          <div class="sc-why">
+            <div class="sc-section-title">لماذا هي مناسبة لك تحديداً؟</div>
+            <p>${svc.desc}</p>
+          </div>
+          <div class="sc-gain">
+            <div class="sc-section-title">ما الذي ستكسبه؟</div>
+            <p>${gain}</p>
+          </div>
+          <div class="sc-meta">
+            <div class="sc-meta-item"><strong>الاستثمار:</strong> ${fmt(svc.pMin)}-${fmt(svc.pMax)} ريال</div>
+            <div class="sc-meta-item"><strong>المدة:</strong> ${svc.dur}</div>
+          </div>
+          <div class="sc-guarantee">الضمان: ${svc.guar}</div>
+          <button class="btn-service" onclick="openModal()">ابدأ بهذه الخدمة</button>
+        </div>
+      </div>`;
+  }).join('');
+
+  /* ---- صندوق الأثر الإجمالي ---- */
+  const impactHtml = isStartup
+    ? `<div class="impact-box">
+        <h3>ماذا يعني تطبيق هذه الخطة؟</h3>
+        <p style="color:#e2e8f0;font-size:1rem;margin:12px 0">
+          بتطبيق هذه الخطة خلال 6 أشهر، مشروعك يمكن أن ينتقل من الصفر إلى
+        </p>
+        <div class="impact-numbers">
+          <div class="impact-num">
+            <strong>${fmt(Rmin)} — ${fmt(Rmax)}</strong>
+            <span>ريال / شهر متوقعة</span>
+          </div>
+        </div>
+        <p class="impact-disclaimer">
+          الأرقام تقديرية بناءً على معدلات السوق السعودي — إصدار 2026-Q1.<br>
+          النتائج الفعلية تعتمد على جودة التنفيذ ومستوى المنافسة في قطاعك.
+        </p>
+      </div>`
+    : `<div class="impact-box">
+        <h3>ماذا يعني تطبيق هذه الخطة؟</h3>
+        <div class="impact-numbers">
+          <div class="impact-num">
+            <strong>${fmt(Rc)}</strong>
+            <span>ريال / شهر حالياً</span>
+          </div>
+          <div class="impact-num" style="font-size:2rem;color:#93c5fd">←</div>
+          <div class="impact-num">
+            <strong>${fmt(Rmin)} — ${fmt(Rmax)}</strong>
+            <span>ريال / شهر متوقعة</span>
+          </div>
+        </div>
+        <p class="impact-range">
+          نمو يتراوح بين
+          <strong style="color:#86efac">${pctMin}%</strong> و
+          <strong style="color:#86efac">${pctMax}%</strong>
+          خلال 6 أشهر
+        </p>
+        <p class="impact-disclaimer">
+          الأرقام تقديرية بناءً على معدلات السوق السعودي — إصدار 2026-Q1.<br>
+          النتائج الفعلية تعتمد على جودة التنفيذ ومستوى المنافسة في قطاعك.
+        </p>
+      </div>`;
+
+  /* ---- قسم التعديل ---- */
+  const editRows = [
+    {label:'القطاع',              value:getLabel('sector',    state.sector),    step:0},
+    {label:'نوع العمل',           value:getLabel('type',      state.type),      step:1},
+    {label:'التحدي الرئيسي',      value:getLabel('challenge', state.challenge), step:2},
+    {label:'الميزانية الشهرية',   value:getLabel('budget',    state.budget),    step:3},
+    {label: isB2B ? 'الإيراد المقدَّر' : 'الزوار / CR / AOV',
+     value: isB2B
+       ? fmt(Rc)+' ريال/شهر'
+       : `${fmt(state.V)} زائر / ${state.CR}% / ${fmt(state.AOV)} ريال`,
+     step:4}
+  ];
+
+  const editHtml = `
+    <div class="edit-section">
+      <h3>إجاباتك — عدّل أي إجابة للحصول على توصية مختلفة</h3>
+      ${editRows.map(r=>`
+        <div class="edit-row">
+          <span class="er-label">${r.label}</span>
+          <span class="er-value">${r.value}</span>
+          <button class="er-btn" onclick="editAnswer(${r.step})">تعديل</button>
+        </div>`).join('')}
+    </div>`;
+
+  /* ---- CTA ---- */
+  const ctaHtml = `
+    <div class="cta-section">
+      <h3>جاهز لتحريك عملك؟</h3>
+      <p>ابدأ بالخطوة الأولى اليوم — كل يوم تأخير يعني فرصة ضائعة.</p>
+      <div class="cta-buttons">
+        <button class="btn-primary"   onclick="openModal()">ابدأ بالخدمة الأولى الآن</button>
+        <button class="btn-secondary" onclick="openModal()">اطلب عرض سعر مفصل</button>
+        <button class="btn-outline"   onclick="openModal()">تحدث مع مستشار</button>
+      </div>
+      <button class="cta-reset" onclick="resetAll()">هل تريد تغيير جميع إجاباتك؟</button>
+    </div>`;
+
+  /* ---- التجميع النهائي ---- */
+  document.getElementById('results-container').innerHTML = `
+    <div class="results-title">
+      <h2>خطة النمو المقترحة لعملك</h2>
+      <p>بناءً على إجاباتك، هذه أفضل الخدمات لوضعك — مرتبة حسب الأولوية</p>
+    </div>
+
+    <div class="summary-card">
+      <h2>ملخص وضعك</h2>
+      <div class="summary-grid">
+        <div class="summary-item">
+          <div class="s-label">القطاع</div>
+          <div class="s-value">${getLabel('sector',state.sector)}</div>
+        </div>
+        <div class="summary-item">
+          <div class="s-label">نوع العمل</div>
+          <div class="s-value">${getLabel('type',state.type)}</div>
+        </div>
+        <div class="summary-item">
+          <div class="s-label">التحدي</div>
+          <div class="s-value">${getLabel('challenge',state.challenge)}</div>
+        </div>
+        <div class="summary-item">
+          <div class="s-label">${isStartup ? 'الفرصة المتاحة' : 'الإيراد الشهري المقدَّر'}</div>
+          <div class="s-value">${isStartup ? 'إطلاق ناجح خلال 6 أشهر' : fmt(Rc)+' ريال'}</div>
+        </div>
+      </div>
+      <div class="summary-item" style="margin-top:12px">
+        <div class="s-label">ما تتركه على الطاولة</div>
+        <div class="s-value">${insightLine}</div>
+      </div>
+      ${alertHtml}
+    </div>
+
+    ${cards}
+    ${impactHtml}
+    ${editHtml}
+    ${ctaHtml}`;
+}
+
+/* ================================================================
+   EDIT & RESET
+   ================================================================ */
+function editAnswer(step){
+  currentStep = step;
+  showScreen('steps-screen');
+  document.getElementById('progress-wrap').classList.add('visible');
+  updateProgress();
+  renderStep();
+}
+
+function resetAll(){
+  Object.assign(state,{
+    sector:null,type:null,challenge:null,budget:null,budgetMax:null,
+    V:0,CR:1.5,AOV:0,hasWebsite:true,noWebsite:false,
+    useCRDefault:false,CRForced:false,mainChannel:null,
+    salesMode:null,VLeads:0,CRLeads:0,
+    Rcurrent:0,Rmin:0,Rmax:0,selectedServices:[]
+  });
+  currentStep = 0;
+  showScreen('steps-screen');
+  updateProgress();
+  renderStep();
+}
+
+/* ================================================================
+   MODAL
+   ================================================================ */
+function openModal() { document.getElementById('contact-modal').classList.add('open'); }
+function closeModal(){ document.getElementById('contact-modal').classList.remove('open'); }
+
+function submitContact(){
+  const name  = document.getElementById('contact-name').value.trim();
+  const phone = document.getElementById('contact-phone').value.trim();
+  if(!name || !phone){ alert('الرجاء إدخال الاسم ورقم الجوال'); return; }
+  document.querySelector('.modal').innerHTML = `
+    <h2 style="color:var(--green);margin-bottom:12px">شكراً ${name}!</h2>
+    <p>سيتواصل معك مستشارنا في أقرب وقت خلال ساعات العمل.</p>
+    <button class="btn-outline"
+            style="margin-top:20px;display:block;width:100%"
+            onclick="closeModal()">العودة للتوصيات</button>`;
+}
+
+// إغلاق المودال عند النقر خارجه
+document.getElementById('contact-modal').addEventListener('click', function(e){
+  if(e.target === this) closeModal();
+});
+</script>
+</body>
+</html>
